@@ -1,5 +1,7 @@
 # PrototypeKit
 
+[![Swift](https://github.com/FridayTechnologies/PrototypeKit/actions/workflows/swift.yml/badge.svg)](https://github.com/FridayTechnologies/PrototypeKit/actions/workflows/swift.yml)
+
 (Ironically, a prototype itself...) 😅
 
 **Status**: Work In Progress
@@ -61,3 +63,11 @@ struct ImageClassifierViewSample: View {
     }
 }
 ```
+
+## FAQs
+
+<details>
+<summary>Is this production ready?</summary>
+<br>
+no.
+</details>
