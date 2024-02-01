@@ -12,9 +12,9 @@ on:
 jobs:
   build:
 
-    runs-on: macos-latest
+    runs-on: macos-14
 
     steps:
     - uses: actions/checkout@v3
-    - name: Run Xcodebuild
+    - name: Run xcodebuild
       run: xcodebuild test -scheme PrototypeKit -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
