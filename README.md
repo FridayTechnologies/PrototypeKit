@@ -7,18 +7,35 @@
 **Status**: Work In Progress
 
 ## Goals 🥅
-- Make it easy to prototype basic ML apps with SwiftUI
-- Great for beginners to learn the basics of Swift/SwiftUI while still being able to build technically impressive apps!
+- Make it easier to prototype basic Machine Learning apps with SwiftUI
 - Provide an easy interface for commonly built views to assist with prototyping and idea validation
 - Effectively a wrapper around the more complex APIs, providing a simpler interface (perhaps not all the same functionality, but enough to get you started and inspired!)
 
-## Examples
+# Examples
 
 Here are a few basic examples you can use today.
 
-### Real-Time Camera View
+## Camera Tasks
 
-_⚠️ You need to first add the 'Privacy - Camera Usage Description' to your Info.plist. Future versions of this framework should give you runtime warnings._
+### Start Here
+
+1. Ensure you have created your Xcode project
+2. Ensure you have added the PrototypeKit package to your project (instructions above -- coming soon)
+3. Select your project file within the project navigator.
+<img width="443" alt="Screenshot 2024-02-02 at 3 42 28 pm" src="https://github.com/FridayTechnologies/PrototypeKit/assets/10896308/815aba65-a0c7-4b82-83ee-2af66e04e550">
+
+4. Ensure that your target is selected
+<img width="295" alt="Screenshot 2024-02-02 at 3 43 22 pm" src="https://github.com/FridayTechnologies/PrototypeKit/assets/10896308/131d5c0b-6d57-40b3-a88b-29e9631a0e03">
+
+5. Select the info tab.
+6. Right-click within the "Custom iOS Target Properties" table, and select "Add Row"
+<img width="741" alt="Screenshot 2024-02-02 at 3 44 40 pm" src="https://github.com/FridayTechnologies/PrototypeKit/assets/10896308/cbf05317-4b26-4f55-aab4-cea09a01e7e7">
+
+7. Use `Privacy - Camera Usage Description` for the key. Type the reason your app will use the camera as the value.
+<img width="834" alt="Screenshot 2024-02-02 at 3 46 30 pm" src="https://github.com/FridayTechnologies/PrototypeKit/assets/10896308/3b88dcf0-dda3-44df-9f65-8aed00618326">
+
+
+### Real-Time Camera View
 
 Utilise `PKCameraView`
 
@@ -37,8 +54,6 @@ struct ContentView: View {
 ```
 
 ### Image Classification
-
-_⚠️ You need to first add the 'Privacy - Camera Usage Description' to your Info.plist. Future versions of this framework should give you runtime warnings._
 
 1. **Required Step:** Drag in your Create ML / Core ML model into Xcode.
 2. Change `FruitClassifier` below to the name of your Model.
