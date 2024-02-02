@@ -20,6 +20,10 @@ class CameraViewController: UIViewController {
     private var screenRect: CGRect! = nil
     
     override func viewDidLoad() {
+        #if targetEnvironment(simulator)
+        checkAndHandleSimulator()
+                return
+        #endif
         checkPermission()
         
         sessionQueue.async { [unowned self] in
@@ -40,7 +44,40 @@ class CameraViewController: UIViewController {
         }
     }
     
+    func checkAndHandleSimulator() {
+#if targetEnvironment(simulator)
+        view.backgroundColor = .gray
+        
+        let iconLabel = UILabel(frame: .zero)
+        iconLabel.text = "📸"
+        iconLabel.font = .preferredFont(forTextStyle: .largeTitle)
+        
+        let warningLabel = UILabel(frame: .zero)
+        warningLabel.text = "Live camera is not supported in previews."
+        
+        let stackView = UIStackView(arrangedSubviews: [ iconLabel, warningLabel ])
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        
+        view.addSubview(stackView)
+
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        stackView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9)
+#endif
+    }
+    
+    func checkDeveloperHasConfiguredInfoPlist() -> Bool {
+        guard let usageDescription = Bundle.main.object(forInfoDictionaryKey: "NSCameraUsageDescription") as? String else {
+            print("⚠️⚠️⚠️ You need to set NSCameraUsageDescription. See Setup on https://github.com/FridayTechnologies/PrototypeKit on how to set this up. ⚠️⚠️⚠️")
+            return false
+        }
+        return true
+    }
+    
     func requestPermission() {
+        guard checkDeveloperHasConfiguredInfoPlist() else { return }
         sessionQueue.suspend()
         AVCaptureDevice.requestAccess(for: .video) { [unowned self] granted in
             self.permissionGranted = granted
@@ -81,10 +118,6 @@ class CameraViewController: UIViewController {
         updatePreviewLayer()
     }
     
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        updatePreviewLayer()
-    }
-    
     func updatePreviewLayer() {
         DispatchQueue.main.async {
             self.screenRect = self.view.bounds
@@ -104,12 +137,7 @@ class CameraViewController: UIViewController {
     
     override func willTransition(to newCollection: UITraitCollection,
                                  with coordinator: UIViewControllerTransitionCoordinator) {
-        screenRect = UIScreen.main.bounds
-        self.previewLayer.frame = CGRect(x: 0,
-                                         y: 0,
-                                         width: screenRect.size.width,
-                                         height: screenRect.size.height)
-        
+        updatePreviewLayer()
         switch UIDevice.current.orientation {
         case UIDeviceOrientation.portraitUpsideDown:
             self.previewLayer.connection?.videoOrientation = .portraitUpsideDown

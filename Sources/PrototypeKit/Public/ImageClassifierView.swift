@@ -19,8 +19,8 @@ final class ImageClassifierReceiver: PKCameraViewReceiver, ObservableObject {
         self.vnCoreMLModel = vnMLModel
     }
     
-    func recieveBuffer(_ buffer: CMSampleBuffer) {
-        let handler = VNImageRequestHandler(cmSampleBuffer: buffer)
+    func processImage(_ cgImage: CGImage) {
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up)
         let request = VNCoreMLRequest(model: self.vnCoreMLModel) { request, error in
             guard let observation = request.results?.first as? VNClassificationObservation else {
                 fatalError()

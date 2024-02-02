@@ -9,7 +9,7 @@ import SwiftUI
 import AVFoundation
 
 protocol PKCameraViewReceiver {
-    func recieveBuffer(_ buffer: CMSampleBuffer)
+    func processImage(_ image: CGImage)
 }
 
 public struct PKCameraView: UIViewControllerRepresentable {
@@ -59,7 +59,18 @@ public struct PKCameraView: UIViewControllerRepresentable {
         }
         
         public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-            receiver?.recieveBuffer(sampleBuffer)
+            
+            if let imageBuffer = sampleBuffer.imageBuffer {
+                let ciImage = CIImage(cvPixelBuffer: imageBuffer)
+                
+                let context = CIContext(options: nil)
+                
+                guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+                    return
+                }
+                
+                receiver?.processImage(cgImage)
+            }
         }
     }
 }
