@@ -35,10 +35,18 @@ Here are a few basic examples you can use today.
 <img width="834" alt="Screenshot 2024-02-02 at 3 46 30 pm" src="https://github.com/FridayTechnologies/PrototypeKit/assets/10896308/3b88dcf0-dda3-44df-9f65-8aed00618326">
 
 
-### Real-Time Camera View
+### Live Camera View
 
 Utilise `PKCameraView`
 
+```swift
+PKCameraView()
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+    
 ```swift
 import SwiftUI
 import PrototypeKit
@@ -52,15 +60,25 @@ struct ContentView: View {
     }
 }
 ```
+</details>
 
-### Image Classification
+
+### Live Image Classification
 
 1. **Required Step:** Drag in your Create ML / Core ML model into Xcode.
 2. Change `FruitClassifier` below to the name of your Model.
 3. You can use latestPrediction as you would any other state variable (i.e refer to other views such as Slider)
 
-Utilise `PKCameraView`
+Utilise `ImageClassifierView`
 
+```swift
+ImageClassifierView(modelURL: FruitClassifier.urlOfModelInThisBundle,
+                                latestPrediction: $latestPrediction)
+```
+<details>
+<summary>Full Example</summary>
+<br>
+    
 ```swift
 import SwiftUI
 import PrototypeKit
@@ -78,6 +96,43 @@ struct ImageClassifierViewSample: View {
     }
 }
 ```
+</details>
+
+
+### Live Text Recognition
+
+Utilise `LiveTextRecognizerView`
+
+```swift
+LiveTextRecognizerView(detectedText: $detectedText)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+    
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct TextRecognizerView: View {
+    
+    @State var detectedText: [String] = []
+    
+    var body: some View {
+        VStack {
+            LiveTextRecognizerView(detectedText: $detectedText)
+            
+            ScrollView {
+                ForEach(Array(detectedText.enumerated()), id: \.offset) { line, text in
+                    Text(text)
+                }
+            }
+        }
+    }
+}
+```
+</details>
 
 ## FAQs
 
