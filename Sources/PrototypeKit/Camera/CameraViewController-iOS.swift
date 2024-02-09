@@ -20,6 +20,17 @@ class CameraViewController: UIViewController {
     private var previewLayer = AVCaptureVideoPreviewLayer()
     private var screenRect: CGRect! = nil
     
+    public var cameraPosition: AVCaptureDevice.Position
+    
+    init(cameraPosition: AVCaptureDevice.Position) {
+        self.cameraPosition = cameraPosition
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         #if targetEnvironment(simulator)
         checkAndHandleSimulator()
@@ -93,9 +104,11 @@ class CameraViewController: UIViewController {
             self.captureSession.commitConfiguration()
         }
         
-        guard let videoDevice = AVCaptureDevice.default(.video,
+        guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera,
                                                         for: .video,
-                                                        position: .back) else { return }
+                                                        position: cameraPosition)
+        else { return }
+        
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice) else { return }
         
         guard captureSession.canAddInput(videoDeviceInput) else { return }

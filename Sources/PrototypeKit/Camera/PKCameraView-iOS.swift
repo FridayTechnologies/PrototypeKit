@@ -11,6 +11,8 @@ import AVFoundation
 
 public struct PKCameraView: UIViewControllerRepresentable {
     
+    @State var position: AVCaptureDevice.Position = .back
+    
     private var receiver: PKCameraViewReceiver?
     
     public init() {}
@@ -39,13 +41,14 @@ public struct PKCameraView: UIViewControllerRepresentable {
         
         var receiver: PKCameraViewReceiver?
         
-        var cameraViewController = CameraViewController()
+        var cameraViewController: CameraViewController
         
         private let receiverQueue = DispatchQueue(label: "receiverQueue")
         
         init(_ cameraView: PKCameraView, receiver: PKCameraViewReceiver?) {
             self.cameraView = cameraView
             self.receiver = receiver
+            self.cameraViewController = CameraViewController(cameraPosition: cameraView.position)
         }
         
         func setupReceiver() {
