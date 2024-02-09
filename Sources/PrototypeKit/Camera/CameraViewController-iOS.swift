@@ -5,6 +5,7 @@
 //  Created by James Dale on 1/2/2024.
 //
 
+#if canImport(UIKit)
 import UIKit
 import SwiftUI
 import AVFoundation
@@ -92,7 +93,7 @@ class CameraViewController: UIViewController {
             self.captureSession.commitConfiguration()
         }
         
-        guard let videoDevice = AVCaptureDevice.default(.builtInDualWideCamera,
+        guard let videoDevice = AVCaptureDevice.default(.video,
                                                         for: .video,
                                                         position: .back) else { return }
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice) else { return }
@@ -152,3 +153,5 @@ class CameraViewController: UIViewController {
         }
     }
 }
+
+#endif

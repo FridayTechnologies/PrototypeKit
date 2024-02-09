@@ -5,12 +5,9 @@
 //  Created by James Dale on 1/2/2024.
 //
 
+#if canImport(UIKit)
 import SwiftUI
 import AVFoundation
-
-protocol PKCameraViewReceiver {
-    func processImage(_ image: CGImage)
-}
 
 public struct PKCameraView: UIViewControllerRepresentable {
     
@@ -74,3 +71,4 @@ public struct PKCameraView: UIViewControllerRepresentable {
         }
     }
 }
+#endif

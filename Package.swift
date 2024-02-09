@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "PrototypeKit",
     platforms: [
-        .iOS(.v14)
+        .iOS(.v14),
+        .macOS(.v13)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -21,6 +22,9 @@ let package = Package(
             name: "PrototypeKit"),
         .testTarget(
             name: "PrototypeKitTests",
-            dependencies: ["PrototypeKit"]),
+            dependencies: ["PrototypeKit"],
+        resources: [
+            .embedInCode("Resources"),
+        ]),
     ]
 )

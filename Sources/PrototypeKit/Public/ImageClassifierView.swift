@@ -20,16 +20,22 @@ final class ImageClassifierReceiver: PKCameraViewReceiver, ObservableObject {
     }
     
     func processImage(_ cgImage: CGImage) {
-        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: .up)
+        let handler = VNImageRequestHandler(cgImage: cgImage, 
+                                            orientation: .up, 
+                                            options: [:])
         let request = VNCoreMLRequest(model: self.vnCoreMLModel) { request, error in
             guard let observation = request.results?.first as? VNClassificationObservation else {
-                fatalError()
+                return
             }
             DispatchQueue.main.async {
                 self.latestPrediction = observation.identifier
                 print("Predicted: ", observation.identifier)
             }
         }
+#if targetEnvironment(simulator)
+        request.usesCPUOnly = true
+#endif
+        request.imageCropAndScaleOption = .centerCrop
         try! handler.perform([request])
     }
 }
