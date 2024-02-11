@@ -55,6 +55,8 @@ public struct PKCameraView: UIViewControllerRepresentable {
             guard receiver != nil else { return }
             let output = AVCaptureVideoDataOutput()
             output.setSampleBufferDelegate(self, queue: receiverQueue)
+            output.alwaysDiscardsLateVideoFrames = true
+            output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)]
             cameraViewController.addOutput(output)
         }
         

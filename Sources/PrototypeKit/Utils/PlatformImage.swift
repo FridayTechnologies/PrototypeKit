@@ -8,7 +8,7 @@
 import Foundation
 
 #if canImport(Cocoa)
-import Cocoa
+import AppKit
 
 public typealias NativeImage = NSImage
 #endif

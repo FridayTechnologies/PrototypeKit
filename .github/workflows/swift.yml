@@ -16,5 +16,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Run xcodebuild
+    - name: Run Tests (iOS)
       run: xcodebuild test -scheme PrototypeKit -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
+
+    - uses: actions/checkout@v3
+    - name: Run Tests (macOS)
+      run: xcodebuild test -scheme PrototypeKit -destination 'platform=macOS'
