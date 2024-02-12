@@ -5,8 +5,8 @@
 //  Created by James Dale on 10/2/2024.
 //
 
-import Foundation
 #if canImport(AppKit)
+import Foundation
 import AppKit
 import SwiftUI
 import AVFoundation
@@ -22,6 +22,7 @@ class CameraViewController: NSViewController {
     private var screenRect: CGRect! = nil
     
     override func viewDidLoad() {
+        checkDeveloperHasConfiguredInfoPlist()
         checkPermission()
         
         sessionQueue.async { [unowned self] in

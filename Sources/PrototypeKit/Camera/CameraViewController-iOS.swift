@@ -32,6 +32,7 @@ class CameraViewController: UIViewController {
     }
     
     override func viewDidLoad() {
+        checkDeveloperHasConfiguredInfoPlist()
         #if targetEnvironment(simulator)
         checkAndHandleSimulator()
                 return
