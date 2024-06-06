@@ -73,7 +73,7 @@ Utilise `ImageClassifierView`
 
 ```swift
 ImageClassifierView(modelURL: FruitClassifier.urlOfModelInThisBundle,
-                                latestPrediction: $latestPrediction)
+                    latestPrediction: $latestPrediction)
 ```
 <details>
 <summary>Full Example</summary>
@@ -129,6 +129,73 @@ struct TextRecognizerView: View {
                 }
             }
         }
+    }
+}
+```
+</details>
+
+### Live Hand Pose Classification
+
+1. **Required Step:** Drag in your Create ML / Core ML model into Xcode.
+2. Change `HandPoseClassifier` below to the name of your Model.
+3. You can use latestPrediction as you would any other state variable (i.e refer to other views such as Slider)
+
+Utilise `HandPoseClassifierView`
+
+```swift
+HandPoseClassifierView(modelURL: HandPoseClassifier.urlOfModelInThisBundle,
+                                 latestPrediction: $latestPrediction)
+```
+<details>
+<summary>Full Example</summary>
+<br>
+    
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct HandPoseClassifierViewSample: View {
+    
+    @State var latestPrediction: String = ""
+    
+    var body: some View {
+        VStack {
+            HandPoseClassifierView(modelURL: HandPoseClassifier.urlOfModelInThisBundle,
+                                   latestPrediction: $latestPrediction)
+            Text(latestPrediction)
+        }
+    }
+}
+```
+</details>
+
+### Live Sound Classification (System Sound Classifier)
+This model uses the system sound classifier, and does not currently support custom Sound Classifier Models.
+
+1. You can use recognizedSound as you would any other state variable (i.e refer to other views such as Slider)
+
+Utilise `recognizeSounds` modifier
+
+```swift
+.recognizeSounds(recognizedSound: $recognizedSound)
+```
+<details>
+<summary>Full Example</summary>
+<br>
+    
+```swift
+import SwiftUI
+import PrototypeKit
+struct SoundAnalyzerSampleView: View {
+    @State var recognizedSound: String?
+    
+    var body: some View {
+        VStack {
+            Text(recognizedSound ?? "No Sound")
+        }
+        .padding()
+        .navigationTitle("Sound Recogniser Sample")
+        .recognizeSounds(recognizedSound: $recognizedSound)
     }
 }
 ```
