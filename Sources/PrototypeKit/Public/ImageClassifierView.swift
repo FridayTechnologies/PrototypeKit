@@ -11,27 +11,29 @@ import Vision
 
 final class ImageClassifierReceiver: PKCameraViewReceiver, ObservableObject {
     
-    let vnCoreMLModel: VNCoreMLModel
+    private let vnCoreMLModel: VNCoreMLModel
     
     @Published var latestPrediction: String?
+    
+    private lazy var request = VNCoreMLRequest(model: self.vnCoreMLModel) { request, error in
+        guard let observation = request.results?.first as? VNClassificationObservation else {
+            return
+        }
+        DispatchQueue.main.async {
+            self.latestPrediction = observation.identifier
+            print("Predicted: ", observation.identifier)
+        }
+    }
     
     init(vnMLModel: VNCoreMLModel) {
         self.vnCoreMLModel = vnMLModel
     }
     
     func processImage(_ cgImage: CGImage) {
-        let handler = VNImageRequestHandler(cgImage: cgImage, 
-                                            orientation: .up, 
+        let handler = VNImageRequestHandler(cgImage: cgImage,
+                                            orientation: .up,
                                             options: [:])
-        let request = VNCoreMLRequest(model: self.vnCoreMLModel) { request, error in
-            guard let observation = request.results?.first as? VNClassificationObservation else {
-                return
-            }
-            DispatchQueue.main.async {
-                self.latestPrediction = observation.identifier
-                print("Predicted: ", observation.identifier)
-            }
-        }
+        
 #if targetEnvironment(simulator)
         // Running in simulator
         request.usesCPUOnly = true
