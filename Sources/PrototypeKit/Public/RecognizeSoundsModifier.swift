@@ -11,7 +11,7 @@ import SwiftUI
 import Combine
 import SoundAnalysis
 
-struct SoundAnalysisConfiguration {
+public struct SoundAnalysisConfiguration {
     /// Indicates the amount of audio, in seconds, that informs a prediction.
     var inferenceWindowSize = Double(1.5)
     
@@ -22,12 +22,21 @@ struct SoundAnalysisConfiguration {
     /// much two consecutive windows overlap. For example, 0.9 means that each window shares 90% of
     /// the audio that the previous window uses.
     var overlapFactor = Double(0.9)
+    
+    var mlModel: MLModel? = nil
+    
+    public init(inferenceWindowSize: Double = Double(1.5), overlapFactor: Double = Double(0.9), mlModel: MLModel? = nil) {
+        self.inferenceWindowSize = inferenceWindowSize
+        self.overlapFactor = overlapFactor
+        self.mlModel = mlModel
+    }
 }
 
 @available(iOS 15.0, *)
 extension View {
-    public func recognizeSounds(recognizedSound: Binding<String?>) -> some View {
-        ModifiedContent(content: self, modifier: RecognizeSoundsModifier(recognizedSound: recognizedSound))
+    public func recognizeSounds(recognizedSound: Binding<String?>, configuration: SoundAnalysisConfiguration = .init()) -> some View {
+        ModifiedContent(content: self, modifier: RecognizeSoundsModifier(recognizedSound: recognizedSound,
+                                                                         configuration: configuration))
     }
 }
 
