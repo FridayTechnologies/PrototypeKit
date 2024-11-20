@@ -9,16 +9,24 @@
 import SwiftUI
 import AVFoundation
 
+public typealias CameraOptions = (position: AVCaptureDevice.Position,
+                                  deviceType: AVCaptureDevice.DeviceType)
+
 public struct PKCameraView: UIViewControllerRepresentable {
     
     @State var position: AVCaptureDevice.Position = .back
+    @State var deviceType: AVCaptureDevice.DeviceType = .builtInWideAngleCamera
     
     private var receiver: PKCameraViewReceiver?
     
     public init() {}
     
-    init(receiver: PKCameraViewReceiver) {
+    init(receiver: PKCameraViewReceiver, options: CameraOptions? = nil) {
         self.receiver = receiver
+        if let options = options {
+            self.position = options.position
+            self.deviceType = options.deviceType
+        }
     }
     
     public func makeUIViewController(context: Context) -> UIViewController {
@@ -48,7 +56,8 @@ public struct PKCameraView: UIViewControllerRepresentable {
         init(_ cameraView: PKCameraView, receiver: PKCameraViewReceiver?) {
             self.cameraView = cameraView
             self.receiver = receiver
-            self.cameraViewController = CameraViewController(cameraPosition: cameraView.position)
+            self.cameraViewController = CameraViewController(cameraPosition: cameraView.position,
+                                                             cameraType: cameraView.deviceType)
         }
         
         func setupReceiver() {

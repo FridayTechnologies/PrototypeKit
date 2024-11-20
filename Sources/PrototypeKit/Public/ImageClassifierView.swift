@@ -54,19 +54,24 @@ public struct ImageClassifierView: View {
     
     @Binding var latestPrediction: String
     
-    public init(modelURL: URL, latestPrediction: Binding<String> = .constant("")) {
+    private let cameraOptions: CameraOptions?
+    
+    public init(modelURL: URL,
+                latestPrediction: Binding<String> = .constant(""),
+                camera: CameraOptions? = nil) {
         do {
             let mlModel = try MLModel(contentsOf: modelURL)
             let vnModel = try VNCoreMLModel(for: mlModel)
             self.receiver = ImageClassifierReceiver(vnMLModel: vnModel)
             self._latestPrediction = latestPrediction
+            self.cameraOptions = camera
         } catch {
             fatalError() // TODO: Make this prettier.
         }
     }
     
     public var body: some View {
-        PKCameraView(receiver: receiver)
+        PKCameraView(receiver: receiver, options: cameraOptions)
             .onReceive(receiver.$latestPrediction, perform: { newPrediction in
                 guard let newPrediction = newPrediction else { return }
                 self.latestPrediction = newPrediction

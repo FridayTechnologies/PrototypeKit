@@ -21,9 +21,11 @@ class CameraViewController: UIViewController {
     private var screenRect: CGRect! = nil
     
     public var cameraPosition: AVCaptureDevice.Position
+    public var cameraDeviceType: AVCaptureDevice.DeviceType
     
-    init(cameraPosition: AVCaptureDevice.Position) {
+    init(cameraPosition: AVCaptureDevice.Position, cameraType: AVCaptureDevice.DeviceType = .builtInWideAngleCamera) {
         self.cameraPosition = cameraPosition
+        self.cameraDeviceType = cameraType
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -105,7 +107,7 @@ class CameraViewController: UIViewController {
             self.captureSession.commitConfiguration()
         }
         
-        guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera,
+        guard let videoDevice = AVCaptureDevice.default(cameraDeviceType,
                                                         for: .video,
                                                         position: cameraPosition)
         else { return }
