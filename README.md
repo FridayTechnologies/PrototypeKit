@@ -134,6 +134,41 @@ struct TextRecognizerView: View {
 ```
 </details>
 
+### Live Barcode Recognition
+
+Utilise `LiveBarcodeRecognizerView`
+
+```swift
+LiveBarcodeRecognizerView(detectedBarcodes: $detectedBarcodes)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+    
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct BarcodeRecognizerView: View {
+    
+    @State var detectedBarcodes: [String] = []
+    
+    var body: some View {
+        VStack {
+            LiveBarcodeRecognizerView(detectedBarcodes: $detectedBarcodes)
+            
+            ScrollView {
+                ForEach(Array(detectedBarcodes.enumerated()), id: \.offset) { index, barcode in
+                    Text(barcode)
+                }
+            }
+        }
+    }
+}
+```
+</details>
+
 ## FAQs
 
 <details>
