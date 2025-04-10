@@ -3,6 +3,7 @@ import Foundation
 import AVFoundation
 import SoundAnalysis
 import Combine
+import CoreML
 
 /// A class for performing sound classification that the app interacts with through a singleton instance.
 ///
@@ -202,6 +203,30 @@ final class SystemAudioClassifier: NSObject {
         stopAudioSession()
     }
 
+    /// Classifies system audio input using a custom Core ML model.
+    ///
+    /// - Parameters:
+    ///   - subject: A subject publishes the results of the sound classification. The subject receives
+    ///   notice when classification terminates. A caller may attach subscribers to the subject before or
+    ///   after calling this method. By attaching after, you may miss errors if classification fails to start.
+    ///   - request: A configured sound classification request that includes the custom ML model.
+    func startSoundClassification(subject: PassthroughSubject<SNClassificationResult, Error>,
+                                request: SNClassifySoundRequest) {
+        stopSoundClassification()
+
+        do {
+            let observer = ClassificationResultsSubject(subject: subject)
+            self.subject = subject
+
+            startListeningForAudioSessionInterruptions()
+            try startAnalyzing([(request, observer)])
+        } catch {
+            subject.send(completion: .failure(error))
+            self.subject = nil
+            stopSoundClassification()
+        }
+    }
+
     /// Classifies system audio input using the built-in classifier.
     ///
     /// - Parameters:
@@ -222,8 +247,8 @@ final class SystemAudioClassifier: NSObject {
     ///   system produces more predictions. So, at the computational expense of producing more predictions,
     ///   decreasing the stride by raising the overlap factor can improve perceived responsiveness.
     func startSoundClassification(subject: PassthroughSubject<SNClassificationResult, Error>,
-                                  inferenceWindowSize: Double,
-                                  overlapFactor: Double) {
+                                inferenceWindowSize: Double,
+                                overlapFactor: Double) {
         stopSoundClassification()
 
         do {

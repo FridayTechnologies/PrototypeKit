@@ -169,6 +169,48 @@ struct BarcodeRecognizerView: View {
 ```
 </details>
 
+### Live Sound Recognition
+
+Utilise `recognizeSounds` modifier to detect sounds in real-time. This feature supports both the system sound classifier and custom Core ML models.
+
+```swift
+.recognizeSounds(recognizedSound: $recognizedSound)
+```
+
+For custom configuration, you can use the `SoundAnalysisConfiguration`:
+
+```swift
+.recognizeSounds(
+    recognizedSound: $recognizedSound,
+    configuration: SoundAnalysisConfiguration(
+        inferenceWindowSize: 1.5,  // Window size in seconds
+        overlapFactor: 0.9,        // Overlap between consecutive windows
+        mlModel: yourCustomModel   // Optional custom Core ML model
+    )
+)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+    
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct SoundRecognizerView: View {
+    @State var recognizedSound: String?
+    
+    var body: some View {
+        VStack {
+            Text("Recognized Sound: \(recognizedSound ?? "None")")
+        }
+        .recognizeSounds(recognizedSound: $recognizedSound)
+    }
+}
+```
+</details>
+
 ## FAQs
 
 <details>

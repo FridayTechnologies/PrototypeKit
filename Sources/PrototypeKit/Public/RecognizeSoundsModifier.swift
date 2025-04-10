@@ -10,6 +10,7 @@ import Foundation
 import SwiftUI
 import Combine
 import SoundAnalysis
+import CoreML
 
 public struct SoundAnalysisConfiguration {
     /// Indicates the amount of audio, in seconds, that informs a prediction.
@@ -23,6 +24,7 @@ public struct SoundAnalysisConfiguration {
     /// the audio that the previous window uses.
     var overlapFactor = Double(0.9)
     
+    /// Optional custom Core ML model for sound classification. If nil, uses the system sound classifier.
     var mlModel: MLModel? = nil
     
     public init(inferenceWindowSize: Double = Double(1.5), overlapFactor: Double = Double(0.9), mlModel: MLModel? = nil) {
@@ -53,10 +55,22 @@ struct RecognizeSoundsModifier: ViewModifier {
         self._recognizedSound = recognizedSound
         SystemAudioClassifier.singleton.stopSoundClassification()
         
-        SystemAudioClassifier.singleton.startSoundClassification(
-            subject: Self.classificationSubject,
-            inferenceWindowSize: configuration.inferenceWindowSize,
-            overlapFactor: configuration.overlapFactor)
+        if let customModel = configuration.mlModel {
+            // Use custom Core ML model for sound classification
+            let request = try! SNClassifySoundRequest(mlModel: customModel)
+            request.windowDuration = CMTimeMakeWithSeconds(configuration.inferenceWindowSize, preferredTimescale: 48_000)
+            request.overlapFactor = configuration.overlapFactor
+            
+            SystemAudioClassifier.singleton.startSoundClassification(
+                subject: Self.classificationSubject,
+                request: request)
+        } else {
+            // Use system sound classifier
+            SystemAudioClassifier.singleton.startSoundClassification(
+                subject: Self.classificationSubject,
+                inferenceWindowSize: configuration.inferenceWindowSize,
+                overlapFactor: configuration.overlapFactor)
+        }
     }
     
     func body(content: Content) -> some View {
