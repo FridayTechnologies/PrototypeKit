@@ -5,13 +5,14 @@
 //  Created by James Dale on 1/2/2024.
 //
 
-#if canImport(UIKit)
+
 import SwiftUI
 import AVFoundation
 
 public typealias CameraOptions = (position: AVCaptureDevice.Position,
                                   deviceType: AVCaptureDevice.DeviceType)
 
+#if canImport(UIKit)
 public struct PKCameraView: UIViewControllerRepresentable {
     
     @State var position: AVCaptureDevice.Position = .back

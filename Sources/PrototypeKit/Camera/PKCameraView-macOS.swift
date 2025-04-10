@@ -15,7 +15,8 @@ public struct PKCameraView: NSViewControllerRepresentable {
     
     public init() {}
     
-    init(receiver: PKCameraViewReceiver) {
+    init(receiver: PKCameraViewReceiver, options: CameraOptions? = nil) {
+        // Note: Camera Options are ignored on macOS.
         self.receiver = receiver
     }
     
