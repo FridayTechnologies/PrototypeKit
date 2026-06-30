@@ -9,17 +9,35 @@
 import SwiftUI
 import AVFoundation
 
+/// Options describing which camera to use.
+///
+/// - `position`: The camera position, e.g. `.front` or `.back`.
+/// - `deviceType`: The capture device type, e.g. `.builtInWideAngleCamera`.
+///
+/// - Note: Camera options are ignored on macOS.
 public typealias CameraOptions = (position: AVCaptureDevice.Position,
                                   deviceType: AVCaptureDevice.DeviceType)
 
 #if canImport(UIKit)
+/// A SwiftUI view that displays a live camera preview.
+///
+/// Use `PKCameraView()` on its own to show the device camera, or let the higher-level views
+/// (such as ``ImageClassifierView`` and ``LiveTextRecognizerView``) drive it for you. Your app target must
+/// declare the `NSCameraUsageDescription` (Privacy - Camera Usage Description) key in its Info properties.
+///
+/// ```swift
+/// PKCameraView()
+/// ```
+///
+/// - Note: The live camera is unavailable in the simulator and Xcode previews, where a placeholder is shown.
 public struct PKCameraView: UIViewControllerRepresentable {
-    
+
     @State var position: AVCaptureDevice.Position = .back
     @State var deviceType: AVCaptureDevice.DeviceType = .builtInWideAngleCamera
-    
+
     private var receiver: PKCameraViewReceiver?
-    
+
+    /// Creates a camera view that displays the default back wide-angle camera preview.
     public init() {}
     
     init(receiver: PKCameraViewReceiver, options: CameraOptions? = nil) {

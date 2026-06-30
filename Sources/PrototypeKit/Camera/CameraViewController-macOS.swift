@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  CameraViewController-macOS.swift
+//
 //
 //  Created by James Dale on 10/2/2024.
 //
