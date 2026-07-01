@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  RecognizeSoundsModifier.swift
 //
 //
 //  Created by James Dale on 12/2/2024.
@@ -12,6 +12,10 @@ import Combine
 import SoundAnalysis
 import CoreML
 
+/// Configuration options for live sound recognition via the ``recognizeSounds(recognizedSound:configuration:)`` modifier.
+///
+/// Use the defaults for the built-in system sound classifier, or supply a custom Core ML model and tune the
+/// analysis window for your use case.
 public struct SoundAnalysisConfiguration {
     /// Indicates the amount of audio, in seconds, that informs a prediction.
     var inferenceWindowSize = Double(1.5)
@@ -27,6 +31,15 @@ public struct SoundAnalysisConfiguration {
     /// Optional custom Core ML model for sound classification. If nil, uses the system sound classifier.
     var mlModel: MLModel? = nil
     
+    /// Creates a sound analysis configuration.
+    ///
+    /// - Parameters:
+    ///   - inferenceWindowSize: The amount of audio, in seconds, that informs each prediction. Larger
+    ///     windows can improve accuracy for longer sounds at the cost of responsiveness. Defaults to `1.5`.
+    ///   - overlapFactor: How much consecutive analysis windows overlap, from `0` to `1`. Higher values
+    ///     produce more frequent predictions. Defaults to `0.9`.
+    ///   - mlModel: An optional custom Core ML sound-classification model. When `nil`, the built-in system
+    ///     sound classifier is used.
     public init(inferenceWindowSize: Double = Double(1.5), overlapFactor: Double = Double(0.9), mlModel: MLModel? = nil) {
         self.inferenceWindowSize = inferenceWindowSize
         self.overlapFactor = overlapFactor
@@ -36,6 +49,26 @@ public struct SoundAnalysisConfiguration {
 
 @available(iOS 15.0, *)
 extension View {
+    /// Listens to the microphone and classifies sounds in real-time, updating a binding with the top label.
+    ///
+    /// Attach this modifier to any view to begin sound recognition. Your app target must declare the
+    /// `NSMicrophoneUsageDescription` (Privacy - Microphone Usage Description) key in its Info properties,
+    /// otherwise classification fails silently.
+    ///
+    /// ```swift
+    /// @State var recognizedSound: String?
+    ///
+    /// Text(recognizedSound ?? "Listening…")
+    ///     .recognizeSounds(recognizedSound: $recognizedSound)
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - recognizedSound: A binding updated with the most recently recognized sound label, or `nil`
+    ///     when nothing has been classified yet.
+    ///   - configuration: A ``SoundAnalysisConfiguration`` controlling the analysis window and optional
+    ///     custom Core ML model. Defaults to the built-in system sound classifier.
+    /// - Returns: A view that performs live sound recognition while visible.
+    /// - Important: Available on iOS 15.0+ only; sound recognition is not supported on macOS.
     public func recognizeSounds(recognizedSound: Binding<String?>, configuration: SoundAnalysisConfiguration = .init()) -> some View {
         ModifiedContent(content: self, modifier: RecognizeSoundsModifier(recognizedSound: recognizedSound,
                                                                          configuration: configuration))

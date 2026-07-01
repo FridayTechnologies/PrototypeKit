@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  HandPoseClassifierView.swift
+//
 //
 //  Created by James Dale on 5/6/2024.
 //
@@ -61,12 +61,34 @@ final class HandPoseClassifierReceiver: PKCameraViewReceiver, ObservableObject {
     }
 }
 
+/// A SwiftUI view that shows a live camera feed and classifies hand poses using a Core ML model.
+///
+/// The view detects hand keypoints with Vision's `VNDetectHumanHandPoseRequest` and feeds them into the
+/// Create ML / Core ML hand-action classifier you provide, publishing the predicted label through a binding.
+/// It drives a ``PKCameraView`` internally, so your app target must declare the `NSCameraUsageDescription`
+/// (Privacy - Camera Usage Description) key in its Info properties.
+///
+/// ```swift
+/// @State var latestPrediction = ""
+///
+/// HandPoseClassifierView(modelURL: HandPoseClassifier.urlOfModelInThisBundle,
+///                        latestPrediction: $latestPrediction)
+/// ```
+///
+/// - Note: A single hand is classified at a time (`maximumHandCount = 1`).
 public struct HandPoseClassifierView: View {
-    
+
     @State var receiver: HandPoseClassifierReceiver
-    
+
     @Binding var latestPrediction: String
-    
+
+    /// Creates a hand pose classifier view backed by a Core ML model.
+    ///
+    /// - Parameters:
+    ///   - modelURL: The location of the compiled Core ML / Create ML hand-pose model to load, typically
+    ///     `YourModel.urlOfModelInThisBundle`.
+    ///   - latestPrediction: A binding updated with the most recent predicted hand-pose label. Defaults to a
+    ///     constant empty string when you only need the on-screen camera feed.
     public init(modelURL: URL, latestPrediction: Binding<String> = .constant("")) {
         do {
             let mlModel = try MLModel(contentsOf: modelURL)

@@ -37,12 +37,27 @@ final class LiveBarcodeRecognizerReceiver: PKCameraViewReceiver, ObservableObjec
     }
 }
 
+/// A SwiftUI view that shows a live camera feed and detects barcodes in real-time using the Vision framework.
+///
+/// Each decoded barcode payload is published through the `detectedBarcodes` binding. The view drives a
+/// ``PKCameraView`` internally, so your app target must declare the `NSCameraUsageDescription`
+/// (Privacy - Camera Usage Description) key in its Info properties.
+///
+/// ```swift
+/// @State var detectedBarcodes: [String] = []
+///
+/// LiveBarcodeRecognizerView(detectedBarcodes: $detectedBarcodes)
+/// ```
 public struct LiveBarcodeRecognizerView: View {
-    
+
     @State var receiver: LiveBarcodeRecognizerReceiver
-    
+
     @Binding var detectedBarcodes: [String]
-    
+
+    /// Creates a live barcode recognizer view.
+    ///
+    /// - Parameter detectedBarcodes: A binding updated with the array of barcode payload strings decoded
+    ///   in the latest frame. Defaults to a constant empty array when you only need the on-screen camera feed.
     public init(detectedBarcodes: Binding<[String]> = .constant([])) {
         self.receiver = LiveBarcodeRecognizerReceiver()
         self._detectedBarcodes = detectedBarcodes

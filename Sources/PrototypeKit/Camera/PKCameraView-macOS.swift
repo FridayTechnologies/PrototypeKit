@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  PKCameraView-macOS.swift
+//
 //
 //  Created by James Dale on 10/2/2024.
 //
@@ -9,10 +9,16 @@
 import SwiftUI
 import AVFoundation
 
+/// A SwiftUI view that displays a live camera preview on macOS.
+///
+/// Use `PKCameraView()` on its own to show the camera, or let the higher-level views drive it for you.
+///
+/// - Note: ``CameraOptions`` are ignored on macOS; the default camera is always used.
 public struct PKCameraView: NSViewControllerRepresentable {
-    
+
     private var receiver: PKCameraViewReceiver?
-    
+
+    /// Creates a camera view that displays the default camera preview.
     public init() {}
     
     init(receiver: PKCameraViewReceiver, options: CameraOptions? = nil) {

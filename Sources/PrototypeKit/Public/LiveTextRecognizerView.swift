@@ -45,12 +45,27 @@ final class LiveTextRecognizerReceiver: PKCameraViewReceiver, ObservableObject {
     }
 }
 
+/// A SwiftUI view that shows a live camera feed and recognizes text in real-time using the Vision framework.
+///
+/// Each detected line of text is published through the `detectedText` binding. The view drives a
+/// ``PKCameraView`` internally, so your app target must declare the `NSCameraUsageDescription`
+/// (Privacy - Camera Usage Description) key in its Info properties.
+///
+/// ```swift
+/// @State var detectedText: [String] = []
+///
+/// LiveTextRecognizerView(detectedText: $detectedText)
+/// ```
 public struct LiveTextRecognizerView: View {
-    
+
     @State var receiver: LiveTextRecognizerReceiver
-    
+
     @Binding var detectedText: [String]
-    
+
+    /// Creates a live text recognizer view.
+    ///
+    /// - Parameter detectedText: A binding updated with the array of text lines found in the latest frame.
+    ///   Defaults to a constant empty array when you only need the on-screen camera feed.
     public init(detectedText: Binding<[String]> = .constant([])) {
         self.receiver = LiveTextRecognizerReceiver()
         self._detectedText = detectedText
