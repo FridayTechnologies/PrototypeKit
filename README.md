@@ -310,32 +310,32 @@ real-time from the accelerometer and gyroscope, using a Create ML / Core ML **Ac
 
 1. **Required Step:** Drag in your Create ML / Core ML activity classifier model into Xcode.
 2. Change `ActivityClassifier` below to the name of your Model.
-3. You can use `latestPrediction` as you would any other state variable.
+3. You can use `latestActivity` as you would any other state variable.
 
-Utilise `ActivityClassifierView`
+Utilise the `classifyActivity` modifier to detect activity in real-time.
 
 ```swift
-ActivityClassifierView(modelURL: ActivityClassifier.urlOfModelInThisBundle,
-                       latestPrediction: $latestPrediction)
+.classifyActivity(modelURL: ActivityClassifier.urlOfModelInThisBundle,
+                  latestActivity: $latestActivity)
 ```
 
 If your model's input/output feature names or sample rate differ from the Create ML defaults,
 supply an `ActivityClassifierConfiguration`:
 
 ```swift
-ActivityClassifierView(
+.classifyActivity(
     modelURL: ActivityClassifier.urlOfModelInThisBundle,
     configuration: ActivityClassifierConfiguration(
         sensorUpdateInterval: 1.0 / 50.0,  // Sensor sample rate in seconds (50 Hz)
         predictionWindowSize: 50           // Samples per prediction
     ),
-    latestPrediction: $latestPrediction
+    latestActivity: $latestActivity
 )
 ```
 
-> **Note:** Activity classification relies on `CoreMotion` and is available on iOS only. The view
-> renders no visible content of its own — place it in your hierarchy to drive classification and
-> read `latestPrediction`.
+> **Note:** Activity classification relies on `CoreMotion` and is available on iOS only. The modifier
+> produces no visible content of its own — attach it to a view to drive classification and read
+> `latestActivity`.
 
 <details>
 <summary>Full Example</summary>
@@ -347,14 +347,15 @@ import PrototypeKit
 
 struct ActivityClassifierViewSample: View {
 
-    @State var latestPrediction: String = ""
+    @State var latestActivity: String?
 
     var body: some View {
         VStack {
-            ActivityClassifierView(modelURL: ActivityClassifier.urlOfModelInThisBundle,
-                                   latestPrediction: $latestPrediction)
-            Text(latestPrediction)
+            Text("Activity: \(latestActivity ?? "Detecting…")")
         }
+        // Attach the modifier to a view to start classifying; updates `latestActivity` live.
+        .classifyActivity(modelURL: ActivityClassifier.urlOfModelInThisBundle,
+                          latestActivity: $latestActivity)
     }
 }
 ```

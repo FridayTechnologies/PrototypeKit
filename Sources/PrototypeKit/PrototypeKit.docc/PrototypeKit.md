@@ -56,6 +56,6 @@ struct ContentView: View {
 
 ### Motion
 
-- ``ActivityClassifierView``
+- ``SwiftUI/View/classifyActivity(modelURL:configuration:latestActivity:)``
 - ``ActivityClassifierConfiguration``
 </content>

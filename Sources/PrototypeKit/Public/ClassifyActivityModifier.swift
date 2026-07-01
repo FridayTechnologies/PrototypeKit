@@ -230,61 +230,69 @@ final class ActivityClassifierReceiver: ObservableObject {
     }
 }
 
-/// A SwiftUI view that classifies the device's physical activity in real-time from motion sensors.
-///
-/// The view samples the accelerometer and gyroscope with `CoreMotion` and feeds the readings into the
-/// Create ML / Core ML **Activity Classifier** you provide, publishing the predicted label through a
-/// binding. Unlike the camera-based classifiers, it renders no visible content of its own — place it in
-/// your hierarchy to drive the classification and observe `latestPrediction`.
-///
-/// Sampling starts when the view appears and stops when it disappears.
-///
-/// ```swift
-/// @State var latestPrediction = ""
-///
-/// VStack {
-///     ActivityClassifierView(modelURL: ActivityClassifier.urlOfModelInThisBundle,
-///                            latestPrediction: $latestPrediction)
-///     Text(latestPrediction)
-/// }
-/// ```
-///
-/// - Note: Activity classification relies on `CoreMotion` and is available on iOS only.
-public struct ActivityClassifierView: View {
-
-    @StateObject private var receiver: ActivityClassifierReceiver
-
-    @Binding var latestPrediction: String
-
-    /// Creates an activity classifier view backed by a Core ML model.
+extension View {
+    /// Classifies the device's physical activity in real-time from the accelerometer and gyroscope.
+    ///
+    /// Attach this modifier to any view to begin activity classification. It samples the accelerometer and
+    /// gyroscope with `CoreMotion` and feeds the readings into the Create ML / Core ML **Activity
+    /// Classifier** you provide, updating a binding with the most recent predicted label. Like sound
+    /// recognition, it produces no visible content of its own — it drives classification while the view it
+    /// is attached to is on screen.
+    ///
+    /// Sampling starts when the view appears and stops when it disappears.
+    ///
+    /// ```swift
+    /// @State var latestActivity: String?
+    ///
+    /// Text(latestActivity ?? "Detecting…")
+    ///     .classifyActivity(modelURL: ActivityClassifier.urlOfModelInThisBundle,
+    ///                       latestActivity: $latestActivity)
+    /// ```
     ///
     /// - Parameters:
     ///   - modelURL: The location of the compiled Core ML / Create ML activity-classification model to
     ///     load, typically `YourModel.urlOfModelInThisBundle`.
     ///   - configuration: An ``ActivityClassifierConfiguration`` describing the sensor sample rate and the
     ///     model's feature names. Defaults match a standard Create ML Activity Classifier.
-    ///   - latestPrediction: A binding updated with the most recent predicted activity label. Defaults to a
-    ///     constant empty string when you only need to drive classification.
-    public init(modelURL: URL,
-                configuration: ActivityClassifierConfiguration = .init(),
-                latestPrediction: Binding<String> = .constant("")) {
+    ///   - latestActivity: A binding updated with the most recently predicted activity label, or `nil`
+    ///     when nothing has been classified yet.
+    /// - Returns: A view that classifies activity while visible.
+    /// - Important: Activity classification relies on `CoreMotion` and is available on iOS only.
+    public func classifyActivity(modelURL: URL,
+                                 configuration: ActivityClassifierConfiguration = .init(),
+                                 latestActivity: Binding<String?>) -> some View {
+        modifier(ClassifyActivityModifier(modelURL: modelURL,
+                                          configuration: configuration,
+                                          latestActivity: latestActivity))
+    }
+}
+
+struct ClassifyActivityModifier: ViewModifier {
+
+    @StateObject private var receiver: ActivityClassifierReceiver
+
+    @Binding var latestActivity: String?
+
+    init(modelURL: URL,
+         configuration: ActivityClassifierConfiguration,
+         latestActivity: Binding<String?>) {
         do {
             let mlModel = try MLModel(contentsOf: modelURL)
             self._receiver = StateObject(wrappedValue: ActivityClassifierReceiver(mlModel: mlModel,
                                                                                   configuration: configuration))
-            self._latestPrediction = latestPrediction
+            self._latestActivity = latestActivity
         } catch {
             fatalError() // TODO: Make this prettier.
         }
     }
 
-    public var body: some View {
-        Color.clear
+    func body(content: Content) -> some View {
+        content
             .onAppear { receiver.start() }
             .onDisappear { receiver.stop() }
             .onReceive(receiver.$latestPrediction) { newPrediction in
                 guard let newPrediction = newPrediction else { return }
-                self.latestPrediction = newPrediction
+                self.latestActivity = newPrediction
             }
     }
 }
