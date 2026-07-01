@@ -39,6 +39,7 @@ claude --plugin-dir ./plugin
 | `/prototypekit:rectangle-detector` | Scaffold live rectangle detection (`LiveRectangleDetectorView`) |
 | `/prototypekit:hand-pose` | Scaffold hand-pose classification (`HandPoseClassifierView`, Core ML) |
 | `/prototypekit:sound-recognizer` | Scaffold sound recognition (`.recognizeSounds`, iOS 15+) |
+| `/prototypekit:natural-language` | Scaffold on-device text analysis — sentiment, language ID, entities (no camera/model) |
 
 You don't have to use the commands — the skill also activates automatically when you
 ask Claude for any of these features in plain language.
