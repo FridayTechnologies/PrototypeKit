@@ -57,4 +57,9 @@ struct ContentView: View {
 ### Sound
 
 - ``SoundAnalysisConfiguration``
+
+### Motion
+
+- ``SwiftUI/View/classifyActivity(modelURL:configuration:latestActivity:)``
+- ``ActivityClassifierConfiguration``
 </content>

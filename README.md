@@ -434,6 +434,66 @@ struct SoundRecognizerView: View {
 ```
 </details>
 
+## Motion Tasks
+
+### Live Activity Classification
+
+Classify the device's physical activity (for example walking, running, or standing still) in
+real-time from the accelerometer and gyroscope, using a Create ML / Core ML **Activity Classifier**.
+
+1. **Required Step:** Drag in your Create ML / Core ML activity classifier model into Xcode.
+2. Change `ActivityClassifier` below to the name of your Model.
+3. You can use `latestActivity` as you would any other state variable.
+
+Utilise the `classifyActivity` modifier to detect activity in real-time.
+
+```swift
+.classifyActivity(modelURL: ActivityClassifier.urlOfModelInThisBundle,
+                  latestActivity: $latestActivity)
+```
+
+If your model's input/output feature names or sample rate differ from the Create ML defaults,
+supply an `ActivityClassifierConfiguration`:
+
+```swift
+.classifyActivity(
+    modelURL: ActivityClassifier.urlOfModelInThisBundle,
+    configuration: ActivityClassifierConfiguration(
+        sensorUpdateInterval: 1.0 / 50.0,  // Sensor sample rate in seconds (50 Hz)
+        predictionWindowSize: 50           // Samples per prediction
+    ),
+    latestActivity: $latestActivity
+)
+```
+
+> **Note:** Activity classification relies on `CoreMotion` and is available on iOS only. The modifier
+> produces no visible content of its own — attach it to a view to drive classification and read
+> `latestActivity`.
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct ActivityClassifierViewSample: View {
+
+    @State var latestActivity: String?
+
+    var body: some View {
+        VStack {
+            Text("Activity: \(latestActivity ?? "Detecting…")")
+        }
+        // Attach the modifier to a view to start classifying; updates `latestActivity` live.
+        .classifyActivity(modelURL: ActivityClassifier.urlOfModelInThisBundle,
+                          latestActivity: $latestActivity)
+    }
+}
+```
+</details>
+
 ## FAQs
 
 <details>
