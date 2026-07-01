@@ -1,0 +1,13 @@
+{
+  "name": "prototypekit",
+  "description": "Scaffold and wire up PrototypeKit SwiftUI views for rapid on-device ML prototyping (camera, image/text/barcode/hand-pose/sound recognition).",
+  "version": "0.1.0",
+  "author": {
+    "name": "Friday Technologies",
+    "url": "https://github.com/FridayTechnologies/PrototypeKit"
+  },
+  "homepage": "https://github.com/FridayTechnologies/PrototypeKit",
+  "repository": "https://github.com/FridayTechnologies/PrototypeKit",
+  "license": "Apache-2.0",
+  "keywords": ["swift", "swiftui", "coreml", "vision", "ml", "prototyping", "ios", "macos"]
+}
