@@ -253,6 +253,139 @@ struct BarcodeRecognizerView: View {
 ```
 </details>
 
+### Live Animal Recognition
+
+Recognize cats and dogs in real-time using the built-in Vision animal recognizer (no Core ML model required).
+
+Utilise `LiveAnimalRecognizerView`
+
+```swift
+LiveAnimalRecognizerView(detectedAnimals: $detectedAnimals)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct AnimalRecognizerView: View {
+
+    @State var detectedAnimals: [String] = []
+
+    var body: some View {
+        VStack {
+            LiveAnimalRecognizerView(detectedAnimals: $detectedAnimals)
+
+            ScrollView {
+                ForEach(Array(detectedAnimals.enumerated()), id: \.offset) { index, animal in
+                    Text(animal)
+                }
+            }
+        }
+    }
+}
+```
+</details>
+
+### Live Face Detection
+
+Detect faces in real-time using the built-in Vision face detector (no Core ML model required).
+
+Utilise `LiveFaceDetectorView`
+
+```swift
+LiveFaceDetectorView(faceCount: $faceCount)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct FaceDetectorView: View {
+
+    @State var faceCount: Int = 0
+
+    var body: some View {
+        VStack {
+            LiveFaceDetectorView(faceCount: $faceCount)
+            Text("Faces: \(faceCount)")
+        }
+    }
+}
+```
+</details>
+
+### Live Body Pose Detection
+
+Detect human body poses in real-time using the built-in Vision human body pose request (no Core ML model required).
+
+Utilise `LiveBodyPoseDetectorView`
+
+```swift
+LiveBodyPoseDetectorView(bodyCount: $bodyCount)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct BodyPoseDetectorView: View {
+
+    @State var bodyCount: Int = 0
+
+    var body: some View {
+        VStack {
+            LiveBodyPoseDetectorView(bodyCount: $bodyCount)
+            Text("Bodies: \(bodyCount)")
+        }
+    }
+}
+```
+</details>
+
+### Live Rectangle Detection
+
+Detect rectangular shapes (documents, cards, signs) in real-time using the built-in Vision rectangle detector (no Core ML model required).
+
+Utilise `LiveRectangleDetectorView`
+
+```swift
+LiveRectangleDetectorView(rectangleCount: $rectangleCount)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct RectangleDetectorView: View {
+
+    @State var rectangleCount: Int = 0
+
+    var body: some View {
+        VStack {
+            LiveRectangleDetectorView(rectangleCount: $rectangleCount)
+            Text("Rectangles: \(rectangleCount)")
+        }
+    }
+}
+```
+</details>
+
 ### Live Sound Recognition
 
 > **Required Step:** Sound recognition uses the microphone, so you must add the

@@ -33,6 +33,10 @@ claude --plugin-dir ./plugin
 | `/prototypekit:image-classifier` | Scaffold live image classification (`ImageClassifierView`, Core ML) |
 | `/prototypekit:text-recognizer` | Scaffold live text recognition / OCR (`LiveTextRecognizerView`) |
 | `/prototypekit:barcode-scanner` | Scaffold live barcode/QR scanning (`LiveBarcodeRecognizerView`) |
+| `/prototypekit:animal-recognizer` | Scaffold live animal recognition — cats & dogs (`LiveAnimalRecognizerView`) |
+| `/prototypekit:face-detector` | Scaffold live face detection (`LiveFaceDetectorView`) |
+| `/prototypekit:body-pose-detector` | Scaffold live body pose detection (`LiveBodyPoseDetectorView`) |
+| `/prototypekit:rectangle-detector` | Scaffold live rectangle detection (`LiveRectangleDetectorView`) |
 | `/prototypekit:hand-pose` | Scaffold hand-pose classification (`HandPoseClassifierView`, Core ML) |
 | `/prototypekit:sound-recognizer` | Scaffold sound recognition (`.recognizeSounds`, iOS 15+) |
 

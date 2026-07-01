@@ -49,6 +49,10 @@ struct ContentView: View {
 - ``HandPoseClassifierView``
 - ``LiveTextRecognizerView``
 - ``LiveBarcodeRecognizerView``
+- ``LiveAnimalRecognizerView``
+- ``LiveFaceDetectorView``
+- ``LiveBodyPoseDetectorView``
+- ``LiveRectangleDetectorView``
 
 ### Sound
 
