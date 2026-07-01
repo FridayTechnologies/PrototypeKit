@@ -301,6 +301,65 @@ struct SoundRecognizerView: View {
 ```
 </details>
 
+## Motion Tasks
+
+### Live Activity Classification
+
+Classify the device's physical activity (for example walking, running, or standing still) in
+real-time from the accelerometer and gyroscope, using a Create ML / Core ML **Activity Classifier**.
+
+1. **Required Step:** Drag in your Create ML / Core ML activity classifier model into Xcode.
+2. Change `ActivityClassifier` below to the name of your Model.
+3. You can use `latestPrediction` as you would any other state variable.
+
+Utilise `ActivityClassifierView`
+
+```swift
+ActivityClassifierView(modelURL: ActivityClassifier.urlOfModelInThisBundle,
+                       latestPrediction: $latestPrediction)
+```
+
+If your model's input/output feature names or sample rate differ from the Create ML defaults,
+supply an `ActivityClassifierConfiguration`:
+
+```swift
+ActivityClassifierView(
+    modelURL: ActivityClassifier.urlOfModelInThisBundle,
+    configuration: ActivityClassifierConfiguration(
+        sensorUpdateInterval: 1.0 / 50.0,  // Sensor sample rate in seconds (50 Hz)
+        predictionWindowSize: 50           // Samples per prediction
+    ),
+    latestPrediction: $latestPrediction
+)
+```
+
+> **Note:** Activity classification relies on `CoreMotion` and is available on iOS only. The view
+> renders no visible content of its own — place it in your hierarchy to drive classification and
+> read `latestPrediction`.
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct ActivityClassifierViewSample: View {
+
+    @State var latestPrediction: String = ""
+
+    var body: some View {
+        VStack {
+            ActivityClassifierView(modelURL: ActivityClassifier.urlOfModelInThisBundle,
+                                   latestPrediction: $latestPrediction)
+            Text(latestPrediction)
+        }
+    }
+}
+```
+</details>
+
 ## FAQs
 
 <details>

@@ -53,4 +53,9 @@ struct ContentView: View {
 ### Sound
 
 - ``SoundAnalysisConfiguration``
+
+### Motion
+
+- ``ActivityClassifierView``
+- ``ActivityClassifierConfiguration``
 </content>
