@@ -4,7 +4,8 @@ description: >-
   Reference and code-generation guide for PrototypeKit, a SwiftUI framework for
   rapid on-device machine-learning prototyping on iOS/macOS. Use whenever the
   user is building with PrototypeKit or asks for a live camera feed, on-device
-  image classification, live text/OCR recognition, barcode scanning, hand-pose
+  image classification, live text/OCR recognition, barcode scanning, animal
+  recognition, face detection, body pose detection, rectangle detection, hand-pose
   classification, or sound recognition in a SwiftUI app. Provides exact
   initializer signatures, @State/@Binding wiring, required Info.plist privacy
   keys, and Core ML model setup.
@@ -44,8 +45,10 @@ Then `import PrototypeKit` in any file that uses it.
 ## Required Info.plist permissions (most common cause of crashes)
 
 Any camera-based view (`PKCameraView`, `ImageClassifierView`,
-`LiveTextRecognizerView`, `LiveBarcodeRecognizerView`, `HandPoseClassifierView`)
-requires a camera-usage description, or the app crashes on launch of that view:
+`LiveTextRecognizerView`, `LiveBarcodeRecognizerView`, `LiveAnimalRecognizerView`,
+`LiveFaceDetectorView`, `LiveBodyPoseDetectorView`, `LiveRectangleDetectorView`,
+`HandPoseClassifierView`) requires a camera-usage description, or the app crashes on
+launch of that view:
 
 - **Camera:** key `NSCameraUsageDescription` — shown in Xcode's Info tab as
   `Privacy - Camera Usage Description`. Value: a human-readable reason.
@@ -184,6 +187,126 @@ struct BarcodeRecognizerView: View {
                     Text(barcode)
                 }
             }
+        }
+    }
+}
+```
+
+### `LiveAnimalRecognizerView` — live animal recognition (cats & dogs)
+
+Uses the built-in Vision animal recognizer — no Core ML model required.
+
+Signature:
+
+```swift
+public init(detectedAnimals: Binding<[String]> = .constant([]))
+```
+
+Full example:
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct AnimalRecognizerView: View {
+    @State var detectedAnimals: [String] = []
+
+    var body: some View {
+        VStack {
+            LiveAnimalRecognizerView(detectedAnimals: $detectedAnimals)
+
+            ScrollView {
+                ForEach(Array(detectedAnimals.enumerated()), id: \.offset) { index, animal in
+                    Text(animal)
+                }
+            }
+        }
+    }
+}
+```
+
+### `LiveFaceDetectorView` — live face detection
+
+Uses the built-in Vision face detector — no Core ML model required. Publishes the number
+of faces found in the latest frame.
+
+Signature:
+
+```swift
+public init(faceCount: Binding<Int> = .constant(0))
+```
+
+Full example:
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct FaceDetectorView: View {
+    @State var faceCount: Int = 0
+
+    var body: some View {
+        VStack {
+            LiveFaceDetectorView(faceCount: $faceCount)
+            Text("Faces: \(faceCount)")
+        }
+    }
+}
+```
+
+### `LiveBodyPoseDetectorView` — live human body pose detection
+
+Uses the built-in Vision human body pose request — no Core ML model required. Publishes the
+number of bodies found in the latest frame.
+
+Signature:
+
+```swift
+public init(bodyCount: Binding<Int> = .constant(0))
+```
+
+Full example:
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct BodyPoseDetectorView: View {
+    @State var bodyCount: Int = 0
+
+    var body: some View {
+        VStack {
+            LiveBodyPoseDetectorView(bodyCount: $bodyCount)
+            Text("Bodies: \(bodyCount)")
+        }
+    }
+}
+```
+
+### `LiveRectangleDetectorView` — live rectangle detection
+
+Uses the built-in Vision rectangle detector — no Core ML model required. Detects rectangular
+shapes (documents, cards, signs) and publishes the count found in the latest frame.
+
+Signature:
+
+```swift
+public init(rectangleCount: Binding<Int> = .constant(0))
+```
+
+Full example:
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct RectangleDetectorView: View {
+    @State var rectangleCount: Int = 0
+
+    var body: some View {
+        VStack {
+            LiveRectangleDetectorView(rectangleCount: $rectangleCount)
+            Text("Rectangles: \(rectangleCount)")
         }
     }
 }
