@@ -53,13 +53,14 @@ final class ImageClassifierTest: XCTestCase {
         let expectation = XCTestExpectation(description: "The item is recognised")
         receiver.$latestPrediction.sink { newValue in
             guard let newValue = newValue else { return }
-            if newValue == expectedOutput { expectation.fulfill() }
-            else {
+            if newValue == expectedOutput {
+                expectation.fulfill()
+            } else {
                 XCTFail("The wrong item was recognised. Expected \(expectedOutput) but received \(newValue)")
             }
         }.store(in: &cancellables)
         
-        wait(for: [expectation], timeout: 10)
+        wait(for: [expectation], timeout: 60)
     }
     #endif
     

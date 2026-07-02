@@ -18,7 +18,7 @@ final class LiveTextRecognizerReceiver: PKCameraViewReceiver, ObservableObject {
     }
     
     func processImage(_ cgImage: CGImage) {
-        let request = VNRecognizeTextRequest { request, error in
+        let request = VNRecognizeTextRequest { request, _ in
             guard let results = request.results else { return }
             var latestTextDetectionResults = [String]()
             

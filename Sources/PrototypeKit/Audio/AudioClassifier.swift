@@ -284,7 +284,7 @@ final class SystemAudioClassifier: NSObject {
     /// Results are published on the long-lived ``results`` relay. Subscribe to ``results`` to receive
     /// classifications; the relay survives interruptions, so classification can be restarted.
     func startSoundClassification(inferenceWindowSize: Double,
-                                overlapFactor: Double) {
+                                  overlapFactor: Double) {
         stopSoundClassification()
 
         let sessionSubject = beginSession()

@@ -79,6 +79,10 @@ go through `os.Logger`, and the public view API is unchanged from prior `master`
   deployment target and availability annotations; and two non-blocking audit jobs run SwiftLint
   and a complete-concurrency (Swift 6 readiness) build.
 - Added a `.swiftlint.yml` (lenient, curated rule set) and Dependabot for GitHub Actions.
+- Cleaned up the SwiftLint violations the new lane surfaced, and gave the macOS Core ML
+  receiver tests a CI-appropriate 60s timeout (coverage instrumentation made the previous
+  10s limit flaky on cold-start inference). The strict-concurrency lane is advisory-only and
+  never fails the build.
 
 ### Meta
 - Aligned the plugin marketplace catalog version with the pre-release (`0.1.0`) status.

@@ -80,18 +80,18 @@ jobs:
       run: swiftlint lint --reporter github-actions-logging
 
   strict-concurrency:
-    name: Strict concurrency (non-blocking)
+    name: Strict concurrency (advisory)
     runs-on: macos-14
-    # Non-blocking audit lane: builds with complete concurrency checking so Swift 6
-    # data-race diagnostics show up in the logs. Resolve these before adopting the
-    # Swift 6 language mode as a required check.
-    continue-on-error: true
+    # Advisory audit lane: builds with complete concurrency checking so Swift 6 data-race
+    # diagnostics show up in the log and as a warning annotation, but the check never fails
+    # (the `|| echo` keeps it green). Resolve the warnings before adopting Swift 6 language mode.
     steps:
     - uses: actions/checkout@v4
 
-    - name: Build with complete concurrency checking
-      run: >
-        xcodebuild build
-        -scheme PrototypeKit
-        -destination 'platform=iOS Simulator,name=iPhone 15 Pro,OS=latest'
-        SWIFT_STRICT_CONCURRENCY=complete
+    - name: Build with complete concurrency checking (advisory)
+      run: |
+        xcodebuild build \
+          -scheme PrototypeKit \
+          -destination 'platform=iOS Simulator,name=iPhone 15 Pro,OS=latest' \
+          SWIFT_STRICT_CONCURRENCY=complete \
+          || echo "::warning::Strict-concurrency build reported issues (advisory). Swift 6 migration pending — see log."
