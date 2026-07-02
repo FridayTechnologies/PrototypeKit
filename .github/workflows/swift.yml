@@ -18,7 +18,7 @@ jobs:
     name: Test (iOS & macOS)
     runs-on: macos-14
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Toolchain versions
       run: swift --version && xcodebuild -version
@@ -56,7 +56,7 @@ jobs:
     name: Build (iOS device / min deployment target)
     runs-on: macos-14
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     # Building for a generic iOS device (no simulator) compiles against the package's
     # declared minimum deployment target, catching availability-annotation mistakes and
@@ -74,7 +74,7 @@ jobs:
     # Flip this to a required check once the codebase is clean against .swiftlint.yml.
     continue-on-error: true
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Install SwiftLint
       run: brew install swiftlint
@@ -89,7 +89,7 @@ jobs:
     # diagnostics show up in the log and as a warning annotation, but the check never fails
     # (the `|| echo` keeps it green). Resolve the warnings before adopting Swift 6 language mode.
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Build with complete concurrency checking (advisory)
       run: |
