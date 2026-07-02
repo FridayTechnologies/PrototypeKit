@@ -62,6 +62,8 @@ directory for a runnable gallery covering every feature.
 - ``ObjectDetectorView``
 - ``DetectedObject``
 - ``HandPoseClassifierView``
+- ``ActionClassifierView``
+- ``ActionClassifierConfiguration``
 - ``LiveTextRecognizerView``
 - ``LiveBarcodeRecognizerView``
 - ``LiveAnimalRecognizerView``

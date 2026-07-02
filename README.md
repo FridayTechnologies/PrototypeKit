@@ -282,6 +282,61 @@ struct HandPoseClassifierViewSample: View {
 </details>
 
 
+### Live Action Classification
+
+Classify a person's action from their body movement in real-time using a Create ML / Core ML
+**Action Classifier** model.
+
+1. **Required Step:** Drag in your Create ML / Core ML action classifier model into Xcode.
+2. Change `ActionClassifier` below to the name of your Model.
+3. You can use `latestPrediction` as you would any other state variable.
+
+An action unfolds over time, so `ActionClassifierView` detects body-pose keypoints with Vision and
+feeds a sliding window of frames (two seconds by default) into your model, updating `latestPrediction`
+as the window advances.
+
+Utilise `ActionClassifierView`
+
+```swift
+ActionClassifierView(modelURL: ActionClassifier.urlOfModelInThisBundle,
+                     latestPrediction: $latestPrediction)
+```
+
+If your model uses different feature names or a different prediction window, supply an
+`ActionClassifierConfiguration`:
+
+```swift
+ActionClassifierView(
+    modelURL: ActionClassifier.urlOfModelInThisBundle,
+    configuration: ActionClassifierConfiguration(predictionWindowSize: 90),
+    latestPrediction: $latestPrediction
+)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct ActionClassifierViewSample: View {
+
+    @State var latestPrediction: String = ""
+
+    var body: some View {
+        VStack {
+            ActionClassifierView(modelURL: ActionClassifier.urlOfModelInThisBundle,
+                                 latestPrediction: $latestPrediction)
+            Text(latestPrediction)
+        }
+    }
+}
+```
+</details>
+
+
 ### Live Text Recognition
 
 Utilise `LiveTextRecognizerView`
