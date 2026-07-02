@@ -10,41 +10,57 @@ import CoreML
 import Vision
 
 final class ImageClassifierReceiver: PKCameraViewReceiver, ObservableObject {
-    
-    private let vnCoreMLModel: VNCoreMLModel
-    
+
+    private let vnCoreMLModel: VNCoreMLModel?
+
     @Published var latestPrediction: String?
-    
-    private lazy var request = VNCoreMLRequest(model: self.vnCoreMLModel) { request, error in
-        guard let observation = request.results?.first as? VNClassificationObservation else {
-            return
+
+    private lazy var request: VNCoreMLRequest? = {
+        guard let model = self.vnCoreMLModel else { return nil }
+        return VNCoreMLRequest(model: model) { [weak self] request, error in
+            if let error = error {
+                PKLog.vision.error("Image classification request failed: \(error.localizedDescription)")
+                return
+            }
+            guard let observation = request.results?.first as? VNClassificationObservation else {
+                return
+            }
+            DispatchQueue.main.async {
+                self?.latestPrediction = observation.identifier
+            }
         }
-        DispatchQueue.main.async {
-            self.latestPrediction = observation.identifier
-            print("Predicted: ", observation.identifier)
-        }
-    }
-    
-    init(vnMLModel: VNCoreMLModel) {
+    }()
+
+    /// Creates a receiver for the given Vision model.
+    ///
+    /// - Parameter vnMLModel: The Vision Core ML model to classify frames with, or `nil` when the model
+    ///   failed to load. When `nil`, frames are ignored and no predictions are published.
+    init(vnMLModel: VNCoreMLModel?) {
         self.vnCoreMLModel = vnMLModel
     }
-    
+
     func processImage(_ cgImage: CGImage) {
+        guard let request = request else { return }
+
         let handler = VNImageRequestHandler(cgImage: cgImage,
                                             orientation: .up,
                                             options: [:])
-        
+
 #if targetEnvironment(simulator)
         // Running in simulator
         request.usesCPUOnly = true
 #endif
-        
+
 #if canImport(XCTest)
         // Running in XCTest
         request.usesCPUOnly = true
 #endif
         request.imageCropAndScaleOption = .centerCrop
-        try! handler.perform([request])
+        do {
+            try handler.perform([request])
+        } catch {
+            PKLog.vision.error("Failed to perform image classification: \(error.localizedDescription)")
+        }
     }
 }
 
@@ -82,14 +98,17 @@ public struct ImageClassifierView: View {
     public init(modelURL: URL,
                 latestPrediction: Binding<String> = .constant(""),
                 camera: CameraOptions? = nil) {
+        self._latestPrediction = latestPrediction
+        self.cameraOptions = camera
         do {
             let mlModel = try MLModel(contentsOf: modelURL)
             let vnModel = try VNCoreMLModel(for: mlModel)
             self.receiver = ImageClassifierReceiver(vnMLModel: vnModel)
-            self._latestPrediction = latestPrediction
-            self.cameraOptions = camera
         } catch {
-            fatalError() // TODO: Make this prettier.
+            // Degrade gracefully: show the camera feed without classification rather than
+            // crashing the host app when the model can't be loaded.
+            PKLog.model.error("Failed to load image classification model at \(modelURL.path): \(error.localizedDescription)")
+            self.receiver = ImageClassifierReceiver(vnMLModel: nil)
         }
     }
     

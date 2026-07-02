@@ -6,13 +6,13 @@
   },
   "metadata": {
     "description": "Claude Code plugin marketplace for PrototypeKit — rapid on-device ML prototyping with SwiftUI.",
-    "version": "1.0.0"
+    "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "prototypekit",
       "source": "./plugin",
-      "description": "Scaffold and wire up PrototypeKit SwiftUI views for rapid on-device ML prototyping (camera, image/text/barcode/hand-pose/sound recognition).",
+      "description": "Scaffold and wire up PrototypeKit SwiftUI views for rapid on-device ML prototyping (camera, image/text/barcode/hand-pose/sound recognition, natural-language analysis).",
       "version": "0.1.0",
       "author": {
         "name": "Friday Technologies",

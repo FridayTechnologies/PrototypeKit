@@ -22,9 +22,9 @@ class CameraViewController: NSViewController {
     private var screenRect: CGRect! = nil
     
     override func viewDidLoad() {
-        checkDeveloperHasConfiguredInfoPlist()
+        guard checkDeveloperHasConfiguredInfoPlist() else { return }
         checkPermission()
-        
+
         sessionQueue.async { [unowned self] in
             guard permissionGranted else { return }
             self.setupCaptureSession()
@@ -43,9 +43,10 @@ class CameraViewController: NSViewController {
         }
     }
     
+    @discardableResult
     func checkDeveloperHasConfiguredInfoPlist() -> Bool {
-        guard let usageDescription = Bundle.main.object(forInfoDictionaryKey: "NSCameraUsageDescription") as? String else {
-            print("⚠️⚠️⚠️ You need to set NSCameraUsageDescription. See Setup on https://github.com/FridayTechnologies/PrototypeKit on how to set this up. ⚠️⚠️⚠️")
+        guard Bundle.main.object(forInfoDictionaryKey: "NSCameraUsageDescription") is String else {
+            PKLog.camera.error("Missing NSCameraUsageDescription. Add the \"Privacy - Camera Usage Description\" key to your app's Info settings. See https://github.com/FridayTechnologies/PrototypeKit for setup.")
             return false
         }
         return true
@@ -83,11 +84,12 @@ class CameraViewController: NSViewController {
         self.previewLayer.connection?.videoOrientation = .portrait
         
         DispatchQueue.main.async { [weak self] in
-            guard self != nil else { return }
-            if self?.view.layer == nil {
-                print("No View Layer!")
+            guard let self = self else { return }
+            guard let layer = self.view.layer else {
+                PKLog.camera.error("Camera preview could not be shown: the host view has no backing layer.")
+                return
             }
-            self!.view.layer?.addSublayer(self!.previewLayer)
+            layer.addSublayer(self.previewLayer)
         }
     }
     

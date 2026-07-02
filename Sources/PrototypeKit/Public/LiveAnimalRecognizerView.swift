@@ -32,7 +32,7 @@ final class LiveAnimalRecognizerReceiver: PKCameraViewReceiver, ObservableObject
         do {
             try requestHandler.perform([request])
         } catch {
-            print("Unable to process image for animal recognition")
+            PKLog.vision.error("Unable to process image for animal recognition: \(error.localizedDescription)")
         }
     }
 }

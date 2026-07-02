@@ -40,7 +40,7 @@ final class LiveTextRecognizerReceiver: PKCameraViewReceiver, ObservableObject {
         do {
             try requestHandler.perform([request])
         } catch {
-            print("Unable to receive image")
+            PKLog.vision.error("Unable to process image for text recognition: \(error.localizedDescription)")
         }
     }
 }

@@ -23,7 +23,7 @@ final class LiveFaceDetectorReceiver: PKCameraViewReceiver, ObservableObject {
         do {
             try requestHandler.perform([request])
         } catch {
-            print("Unable to process image for face detection")
+            PKLog.vision.error("Unable to process image for face detection: \(error.localizedDescription)")
         }
     }
 }
