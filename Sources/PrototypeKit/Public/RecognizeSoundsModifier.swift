@@ -29,7 +29,7 @@ public struct SoundAnalysisConfiguration {
     var overlapFactor = Double(0.9)
     
     /// Optional custom Core ML model for sound classification. If nil, uses the system sound classifier.
-    var mlModel: MLModel? = nil
+    var mlModel: MLModel?
     
     /// Creates a sound analysis configuration.
     ///

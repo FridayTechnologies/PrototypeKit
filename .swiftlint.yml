@@ -1,0 +1,37 @@
+# SwiftLint configuration for PrototypeKit.
+# Intentionally lenient: PrototypeKit is a small, readable prototyping toolkit, so we enable
+# a curated set of high-signal rules rather than the full default set. The lint CI job is
+# non-blocking; tighten this and make it required once the codebase is consistently clean.
+
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+
+disabled_rules:
+  - trailing_whitespace   # noisy; not worth failing CI over
+  - todo                  # tracked separately
+
+opt_in_rules:
+  - closure_spacing
+  - empty_count
+  - empty_string
+  - fatal_error_message
+  - first_where
+  - redundant_nil_coalescing
+
+line_length:
+  warning: 140
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  min_length: 1          # allow short names like `x`, `y`, `i`, `fp`
+  excluded:
+    - id
+
+type_name:
+  max_length: 50

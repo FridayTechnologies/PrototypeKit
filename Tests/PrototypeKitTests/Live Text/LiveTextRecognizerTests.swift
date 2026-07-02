@@ -44,8 +44,9 @@ final class LiveTextRecognizerTests: XCTestCase {
         let expectation = XCTestExpectation(description: "The text is recognised")
         receiver.$detectedText.sink { newValue in
             guard !newValue.isEmpty else { return }
-            if newValue == expectedOutput { expectation.fulfill() }
-            else {
+            if newValue == expectedOutput {
+                expectation.fulfill()
+            } else {
                 XCTFail("The wrong item was recognised. Expected \(expectedOutput) but received \(newValue)")
             }
         }.store(in: &cancellables)

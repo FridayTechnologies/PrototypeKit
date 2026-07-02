@@ -74,6 +74,15 @@ go through `os.Logger`, and the public view API is unchanged from prior `master`
 ### CI
 - Removed a duplicate `actions/checkout` step from the Swift workflow, upgraded it to `v4`,
   pinned the simulator destination to `OS=latest`, and added `concurrency` cancellation.
+- Broadened CI into separate jobs: iOS + macOS tests now collect code coverage (summarised in
+  the job summary); a new job builds for a generic iOS device to validate the minimum
+  deployment target and availability annotations; and two non-blocking audit jobs run SwiftLint
+  and a complete-concurrency (Swift 6 readiness) build.
+- Added a `.swiftlint.yml` (lenient, curated rule set) and Dependabot for GitHub Actions.
+- Cleaned up the SwiftLint violations the new lane surfaced. `testICReceiverMac` (live Core ML
+  inference via `VNCoreMLRequest`) is skipped on CI — the headless runner's ANE/GPU inference
+  path stalls there — but still runs locally; the Core ML receiver tests also use a generous
+  60s timeout. The strict-concurrency lane is advisory-only and never fails the build.
 
 ### Meta
 - Aligned the plugin marketplace catalog version with the pre-release (`0.1.0`) status.

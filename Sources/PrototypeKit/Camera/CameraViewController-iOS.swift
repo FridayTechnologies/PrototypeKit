@@ -37,8 +37,11 @@ class CameraViewController: UIViewController {
         // Surface a clear, on-screen message instead of a black preview when the host app hasn't
         // declared the camera usage description — a mistake that otherwise looks like a broken camera.
         guard checkDeveloperHasConfiguredInfoPlist() else {
-            presentCenteredMessage(icon: "⚠️",
-                                   text: "Camera unavailable: add the \"Privacy - Camera Usage Description\" (NSCameraUsageDescription) key to your app's Info settings. See the PrototypeKit setup guide.")
+            presentCenteredMessage(
+                icon: "⚠️",
+                text: "Camera unavailable: add the \"Privacy - Camera Usage Description\" "
+                    + "(NSCameraUsageDescription) key to your app's Info settings. "
+                    + "See the PrototypeKit setup guide.")
             return
         }
         #if targetEnvironment(simulator)
@@ -100,7 +103,10 @@ class CameraViewController: UIViewController {
     @discardableResult
     func checkDeveloperHasConfiguredInfoPlist() -> Bool {
         guard Bundle.main.object(forInfoDictionaryKey: "NSCameraUsageDescription") is String else {
-            PKLog.camera.error("Missing NSCameraUsageDescription. Add the \"Privacy - Camera Usage Description\" key to your app's Info settings. See https://github.com/FridayTechnologies/PrototypeKit for setup.")
+            PKLog.camera.error(
+                "Missing NSCameraUsageDescription. Add the \"Privacy - Camera Usage Description\" "
+                + "key to your app's Info settings. "
+                + "See https://github.com/FridayTechnologies/PrototypeKit for setup.")
             return false
         }
         return true

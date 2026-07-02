@@ -33,6 +33,8 @@ final class ImageClassifierTest: XCTestCase {
 
     #if os(macOS)
     func testICReceiverMac() throws {
+        // Note: skipped on CI via `-skip-testing` in the Swift workflow — the VNCoreMLRequest
+        // inference path stalls on the headless runner (no ANE/GPU). Runs locally.
         let configuration = MLModelConfiguration()
         configuration.computeUnits = .cpuOnly
         let mlModel = try MLModel(contentsOf: FruitClassifier.urlOfModelInThisBundle,
@@ -53,13 +55,14 @@ final class ImageClassifierTest: XCTestCase {
         let expectation = XCTestExpectation(description: "The item is recognised")
         receiver.$latestPrediction.sink { newValue in
             guard let newValue = newValue else { return }
-            if newValue == expectedOutput { expectation.fulfill() }
-            else {
+            if newValue == expectedOutput {
+                expectation.fulfill()
+            } else {
                 XCTFail("The wrong item was recognised. Expected \(expectedOutput) but received \(newValue)")
             }
         }.store(in: &cancellables)
         
-        wait(for: [expectation], timeout: 10)
+        wait(for: [expectation], timeout: 60)
     }
     #endif
     

@@ -10,7 +10,7 @@ final class LiveBodyPoseDetectorReceiver: PKCameraViewReceiver, ObservableObject
     }
 
     func processImage(_ cgImage: CGImage) {
-        let request = VNDetectHumanBodyPoseRequest { request, error in
+        let request = VNDetectHumanBodyPoseRequest { request, _ in
             let count = (request.results as? [VNHumanBodyPoseObservation])?.count ?? 0
 
             DispatchQueue.main.async {

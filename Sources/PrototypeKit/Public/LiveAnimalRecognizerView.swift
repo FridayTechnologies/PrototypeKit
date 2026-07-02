@@ -10,7 +10,7 @@ final class LiveAnimalRecognizerReceiver: PKCameraViewReceiver, ObservableObject
     }
 
     func processImage(_ cgImage: CGImage) {
-        let request = VNRecognizeAnimalsRequest { request, error in
+        let request = VNRecognizeAnimalsRequest { request, _ in
             guard let results = request.results else { return }
             var latestAnimalResults = [String]()
 

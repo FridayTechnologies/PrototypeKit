@@ -10,7 +10,7 @@ final class LiveBarcodeRecognizerReceiver: PKCameraViewReceiver, ObservableObjec
     }
     
     func processImage(_ cgImage: CGImage) {
-        let request = VNDetectBarcodesRequest { request, error in
+        let request = VNDetectBarcodesRequest { request, _ in
             guard let results = request.results else { return }
             var latestBarcodeResults = [String]()
             
@@ -69,4 +69,4 @@ public struct LiveBarcodeRecognizerView: View {
                 self.detectedBarcodes = newBarcodes
             })
     }
-} 
+}

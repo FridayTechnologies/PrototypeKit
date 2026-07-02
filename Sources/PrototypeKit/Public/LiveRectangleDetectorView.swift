@@ -10,7 +10,7 @@ final class LiveRectangleDetectorReceiver: PKCameraViewReceiver, ObservableObjec
     }
 
     func processImage(_ cgImage: CGImage) {
-        let request = VNDetectRectanglesRequest { request, error in
+        let request = VNDetectRectanglesRequest { request, _ in
             let count = (request.results as? [VNRectangleObservation])?.count ?? 0
 
             DispatchQueue.main.async {

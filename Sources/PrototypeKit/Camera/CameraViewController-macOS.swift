@@ -46,7 +46,10 @@ class CameraViewController: NSViewController {
     @discardableResult
     func checkDeveloperHasConfiguredInfoPlist() -> Bool {
         guard Bundle.main.object(forInfoDictionaryKey: "NSCameraUsageDescription") is String else {
-            PKLog.camera.error("Missing NSCameraUsageDescription. Add the \"Privacy - Camera Usage Description\" key to your app's Info settings. See https://github.com/FridayTechnologies/PrototypeKit for setup.")
+            PKLog.camera.error(
+                "Missing NSCameraUsageDescription. Add the \"Privacy - Camera Usage Description\" "
+                + "key to your app's Info settings. "
+                + "See https://github.com/FridayTechnologies/PrototypeKit for setup.")
             return false
         }
         return true

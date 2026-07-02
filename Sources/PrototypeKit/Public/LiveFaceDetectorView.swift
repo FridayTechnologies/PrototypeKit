@@ -10,7 +10,7 @@ final class LiveFaceDetectorReceiver: PKCameraViewReceiver, ObservableObject {
     }
 
     func processImage(_ cgImage: CGImage) {
-        let request = VNDetectFaceRectanglesRequest { request, error in
+        let request = VNDetectFaceRectanglesRequest { request, _ in
             let count = (request.results as? [VNFaceObservation])?.count ?? 0
 
             DispatchQueue.main.async {
