@@ -77,6 +77,10 @@ public struct ImageClassifierView: View {
 
     private let cameraOptions: CameraOptions?
 
+    private let onError: ((PrototypeKitError) -> Void)?
+
+    private let loadError: PrototypeKitError?
+
     /// Creates an image classifier view backed by a Core ML model.
     ///
     /// - Parameters:
@@ -86,28 +90,37 @@ public struct ImageClassifierView: View {
     ///     constant empty string when you only need the on-screen camera feed.
     ///   - camera: Optional ``CameraOptions`` selecting the camera position and device type. Pass `nil`
     ///     to use the default back wide-angle camera. (Ignored on macOS.)
+    ///   - onError: An optional closure called (on the main thread) if the model fails to load. The view
+    ///     still shows the camera feed without classification; use this to surface the failure in your UI.
     public init(modelURL: URL,
                 latestPrediction: Binding<String> = .constant(""),
-                camera: CameraOptions? = nil) {
+                camera: CameraOptions? = nil,
+                onError: ((PrototypeKitError) -> Void)? = nil) {
         self._latestPrediction = latestPrediction
         self.cameraOptions = camera
+        self.onError = onError
         do {
             let mlModel = try MLModel(contentsOf: modelURL)
             let vnModel = try VNCoreMLModel(for: mlModel)
             self.receiver = ImageClassifierReceiver(vnMLModel: vnModel)
+            self.loadError = nil
         } catch {
             // Degrade gracefully: show the camera feed without classification rather than
             // crashing the host app when the model can't be loaded.
             PKLog.model.error("Failed to load image classification model at \(modelURL.path): \(error.localizedDescription)")
             self.receiver = ImageClassifierReceiver(vnMLModel: nil)
+            self.loadError = .modelLoadFailed(url: modelURL, underlying: error)
         }
     }
-    
+
     public var body: some View {
         PKCameraView(receiver: receiver, options: cameraOptions)
             .onReceive(receiver.$latestPrediction, perform: { newPrediction in
                 guard let newPrediction = newPrediction else { return }
                 self.latestPrediction = newPrediction
             })
+            .onAppear {
+                if let loadError = loadError { onError?(loadError) }
+            }
     }
 }

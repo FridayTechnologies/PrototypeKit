@@ -89,6 +89,10 @@ public struct HandPoseClassifierView: View {
 
     @Binding var latestPrediction: String
 
+    private let onError: ((PrototypeKitError) -> Void)?
+
+    private let loadError: PrototypeKitError?
+
     /// Creates a hand pose classifier view backed by a Core ML model.
     ///
     /// - Parameters:
@@ -96,24 +100,34 @@ public struct HandPoseClassifierView: View {
     ///     `YourModel.urlOfModelInThisBundle`.
     ///   - latestPrediction: A binding updated with the most recent predicted hand-pose label. Defaults to a
     ///     constant empty string when you only need the on-screen camera feed.
-    public init(modelURL: URL, latestPrediction: Binding<String> = .constant("")) {
+    ///   - onError: An optional closure called (on the main thread) if the model fails to load. The view
+    ///     still shows the camera feed without classification; use this to surface the failure in your UI.
+    public init(modelURL: URL,
+                latestPrediction: Binding<String> = .constant(""),
+                onError: ((PrototypeKitError) -> Void)? = nil) {
         self._latestPrediction = latestPrediction
+        self.onError = onError
         do {
             let mlModel = try MLModel(contentsOf: modelURL)
             self.receiver = HandPoseClassifierReceiver(mlModel: mlModel)
+            self.loadError = nil
         } catch {
             // Degrade gracefully: show the camera feed without classification rather than
             // crashing the host app when the model can't be loaded.
             PKLog.model.error("Failed to load hand pose model at \(modelURL.path): \(error.localizedDescription)")
             self.receiver = HandPoseClassifierReceiver(mlModel: nil)
+            self.loadError = .modelLoadFailed(url: modelURL, underlying: error)
         }
     }
-    
+
     public var body: some View {
         PKCameraView(receiver: receiver)
             .onReceive(receiver.$latestPrediction, perform: { newPrediction in
                 guard let newPrediction = newPrediction else { return }
                 self.latestPrediction = newPrediction
             })
+            .onAppear {
+                if let loadError = loadError { onError?(loadError) }
+            }
     }
 }

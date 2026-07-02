@@ -52,6 +52,11 @@ final class SystemAudioClassifier: NSObject {
     /// restart classification after an interruption and keep receiving results on the same relay.
     let results = PassthroughSubject<SNClassificationResult, Never>()
 
+    /// A long-lived relay that publishes classification session errors (denied microphone access,
+    /// audio interruptions, failed starts). Like ``results`` it never completes, so callers can keep
+    /// observing across sessions.
+    let errors = PassthroughSubject<Error, Never>()
+
     /// The subject for the current classification session, if any.
     private var sessionSubject: PassthroughSubject<SNClassificationResult, Error>?
 
@@ -164,6 +169,7 @@ final class SystemAudioClassifier: NSObject {
             receiveCompletion: { [weak self] completion in
                 if case .failure(let error) = completion {
                     PKLog.audio.error("Sound classification session ended: \(error.localizedDescription)")
+                    self?.errors.send(error)
                 }
                 self?.sessionCancellable = nil
                 self?.sessionSubject = nil

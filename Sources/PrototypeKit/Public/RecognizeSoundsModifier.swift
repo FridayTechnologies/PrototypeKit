@@ -67,11 +67,16 @@ extension View {
     ///     when nothing has been classified yet.
     ///   - configuration: A ``SoundAnalysisConfiguration`` controlling the analysis window and optional
     ///     custom Core ML model. Defaults to the built-in system sound classifier.
+    ///   - onError: An optional closure called (on the main thread) if classification can't start or is
+    ///     interrupted — for example, denied microphone access or an audio-session interruption.
     /// - Returns: A view that performs live sound recognition while visible.
     /// - Important: Available on iOS 15.0+ only; sound recognition is not supported on macOS.
-    public func recognizeSounds(recognizedSound: Binding<String?>, configuration: SoundAnalysisConfiguration = .init()) -> some View {
+    public func recognizeSounds(recognizedSound: Binding<String?>,
+                                configuration: SoundAnalysisConfiguration = .init(),
+                                onError: ((PrototypeKitError) -> Void)? = nil) -> some View {
         ModifiedContent(content: self, modifier: RecognizeSoundsModifier(recognizedSound: recognizedSound,
-                                                                         configuration: configuration))
+                                                                         configuration: configuration,
+                                                                         onError: onError))
     }
 }
 
@@ -80,10 +85,18 @@ struct RecognizeSoundsModifier: ViewModifier {
 
     @Binding var recognizedSound: String?
 
-    init(recognizedSound: Binding<String?>, configuration: SoundAnalysisConfiguration = .init()) {
+    private let onError: ((PrototypeKitError) -> Void)?
+
+    private let setupError: PrototypeKitError?
+
+    init(recognizedSound: Binding<String?>,
+         configuration: SoundAnalysisConfiguration = .init(),
+         onError: ((PrototypeKitError) -> Void)? = nil) {
         self._recognizedSound = recognizedSound
+        self.onError = onError
         SystemAudioClassifier.singleton.stopSoundClassification()
 
+        var setupError: PrototypeKitError?
         if let customModel = configuration.mlModel {
             // Use custom Core ML model for sound classification
             do {
@@ -96,6 +109,7 @@ struct RecognizeSoundsModifier: ViewModifier {
                 // Degrade gracefully: no classification starts rather than crashing the host app
                 // when the custom model can't back a sound request.
                 PKLog.audio.error("Failed to create sound request from custom model: \(error.localizedDescription)")
+                setupError = .soundClassificationFailed(underlying: error)
             }
         } else {
             // Use system sound classifier
@@ -103,6 +117,7 @@ struct RecognizeSoundsModifier: ViewModifier {
                 inferenceWindowSize: configuration.inferenceWindowSize,
                 overlapFactor: configuration.overlapFactor)
         }
+        self.setupError = setupError
     }
 
     func body(content: Content) -> some View {
@@ -110,6 +125,12 @@ struct RecognizeSoundsModifier: ViewModifier {
             .onReceive(classificationPublisher, perform: { result in
                 self.recognizedSound = result.classifications.first?.identifier
             })
+            .onReceive(errorPublisher, perform: { error in
+                onError?(.soundClassificationFailed(underlying: error))
+            })
+            .onAppear {
+                if let setupError = setupError { onError?(setupError) }
+            }
     }
 
     /// A main-thread publisher of classification results.
@@ -120,6 +141,14 @@ struct RecognizeSoundsModifier: ViewModifier {
     /// that could trap and crash the host app on the first interruption.)
     private var classificationPublisher: AnyPublisher<SNClassificationResult, Never> {
         SystemAudioClassifier.singleton.results
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    /// A main-thread publisher of classification session errors, sourced from the classifier's
+    /// long-lived `errors` relay (which never completes).
+    private var errorPublisher: AnyPublisher<Error, Never> {
+        SystemAudioClassifier.singleton.errors
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }

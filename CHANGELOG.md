@@ -8,7 +8,14 @@ once tagged releases begin.
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+- **Error reporting.** A public `PrototypeKitError` type and an optional `onError` closure on the
+  entry points that can fail at setup time: `ImageClassifierView`, `HandPoseClassifierView`, the
+  `classifyActivity(...)` modifier (model-load failures), and the `recognizeSounds(...)` modifier
+  (failed starts, denied microphone access, audio-session interruptions). Apps can now *react* to
+  these failures — show a message, offer a retry — instead of only reading the log. The parameter
+  defaults to `nil`, so existing call sites are unaffected, and errors are still logged as before.
+  Transient per-frame Vision errors remain log-only by design.
 
 ## [0.1.0] - 2026-07-02
 
