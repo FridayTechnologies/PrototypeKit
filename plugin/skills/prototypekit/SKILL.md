@@ -49,8 +49,8 @@ Then `import PrototypeKit` in any file that uses it.
 Any camera-based view (`PKCameraView`, `ImageClassifierView`, `ObjectDetectorView`,
 `LiveTextRecognizerView`, `LiveBarcodeRecognizerView`, `LiveAnimalRecognizerView`,
 `LiveFaceDetectorView`, `LiveBodyPoseDetectorView`, `LiveRectangleDetectorView`,
-`HandPoseClassifierView`) requires a camera-usage description, or the app crashes on
-launch of that view:
+`HandPoseClassifierView`, `ActionClassifierView`) requires a camera-usage description, or the app
+crashes on launch of that view:
 
 - **Camera:** key `NSCameraUsageDescription` — shown in Xcode's Info tab as
   `Privacy - Camera Usage Description`. Value: a human-readable reason.
@@ -66,7 +66,8 @@ To add: select the project ▸ your target ▸ **Info** tab ▸ right-click the
 ## Core ML models
 
 Views that classify or detect (`ImageClassifierView`, `ObjectDetectorView`,
-`HandPoseClassifierView`) take a `modelURL: URL` pointing at a compiled Core ML model.
+`HandPoseClassifierView`, `ActionClassifierView`) take a `modelURL: URL` pointing at a compiled
+Core ML model.
 
 1. Drag your `.mlmodel` (from Create ML / Core ML) into the Xcode project.
 2. Xcode generates a Swift class named after the model.
@@ -432,6 +433,46 @@ struct HandPoseSample: View {
 }
 ```
 
+### `ActionClassifierView` — action classification from body movement (Core ML)
+
+Detects a person's body-pose keypoints with Vision and classifies their action from a sliding
+window of frames using a Create ML / Core ML **Action Classifier** model. An action unfolds over
+time, so the view collects a window (two seconds by default) before its first prediction and
+updates as the window advances.
+
+Signature:
+
+```swift
+public init(modelURL: URL,
+            configuration: ActionClassifierConfiguration = .init(),
+            latestPrediction: Binding<String> = .constant(""),
+            camera: CameraOptions? = nil,
+            onError: ((PrototypeKitError) -> Void)? = nil)
+```
+
+`ActionClassifierConfiguration` exposes `posesFeatureName` (default `"poses"`), `labelFeatureName`
+(default `"label"`), `predictionWindowSize` (default `60`), and `predictionInterval` (default `15`)
+for models that differ from the Create ML template.
+
+Full example:
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct ActionClassifierSample: View {
+    @State var latestPrediction: String = ""
+
+    var body: some View {
+        VStack {
+            ActionClassifierView(modelURL: ActionClassifier.urlOfModelInThisBundle,
+                                 latestPrediction: $latestPrediction)
+            Text(latestPrediction)
+        }
+    }
+}
+```
+
 ### `.recognizeSounds` — live sound recognition (iOS 15+ only)
 
 A `View` modifier. Uses the built-in system sound classifier by default, or a
@@ -529,7 +570,7 @@ struct SentimentView: View {
 - **Missing privacy key = crash.** Add `NSCameraUsageDescription` (camera views)
   and `NSMicrophoneUsageDescription` (`recognizeSounds`) before running.
 - **Bad model URL.** `ImageClassifierView` / `ObjectDetectorView` /
-  `HandPoseClassifierView` degrade gracefully if the model fails to load — the camera
+  `HandPoseClassifierView` / `ActionClassifierView` degrade gracefully if the model fails to load — the camera
   feed still shows but no predictions/detections are produced, and the failure is logged
   (and reported to `onError` where available). Verify the model is in the target's bundle
   and the generated class name matches.

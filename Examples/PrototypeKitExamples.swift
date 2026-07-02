@@ -25,6 +25,7 @@ struct ExampleGallery: View {
                     NavigationLink("Image classification", destination: ImageClassifierExample())
                     NavigationLink("Object detection", destination: ObjectDetectorExample())
                     NavigationLink("Object detection (boxes)", destination: ObjectDetectorBoxesExample())
+                    NavigationLink("Action classification", destination: ActionClassifierExample())
                 }
                 Section("Sound") {
                     NavigationLink("Sound recognition", destination: SoundExample())
@@ -209,6 +210,28 @@ struct SoundExample: View {
         }
         .recognizeSounds(recognizedSound: $recognizedSound) { error in
             errorMessage = error.localizedDescription
+        }
+    }
+}
+
+/// Classifies a person's action from their body movement with a Create ML action classifier.
+///
+/// Replace `modelURL` with your own model, e.g. `ActionClassifier.urlOfModelInThisBundle`.
+struct ActionClassifierExample: View {
+    @State private var latestPrediction = ""
+    @State private var errorMessage: String?
+
+    private let modelURL = URL(fileURLWithPath: "/path/to/YourActionClassifier.mlmodelc")
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ActionClassifierView(modelURL: modelURL, latestPrediction: $latestPrediction) { error in
+                errorMessage = error.localizedDescription
+            }
+            Text(latestPrediction.isEmpty ? "Detecting…" : latestPrediction).font(.title)
+            if let errorMessage = errorMessage {
+                Text(errorMessage).foregroundStyle(.red).font(.footnote)
+            }
         }
     }
 }

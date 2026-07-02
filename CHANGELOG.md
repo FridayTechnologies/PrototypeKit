@@ -9,6 +9,14 @@ once tagged releases begin.
 ## [Unreleased]
 
 ### Added
+- **Action classification.** A new `ActionClassifierView` classifies a person's action from their
+  body movement on the live camera feed using a Create ML / Core ML **Action Classifier** model. It
+  detects body-pose keypoints with Vision's `VNDetectHumanBodyPoseRequest` and feeds a sliding window
+  of frames (two seconds by default) into the model, publishing the predicted label through a binding.
+  An `ActionClassifierConfiguration` exposes the prediction window, prediction interval, and feature
+  names for models that differ from the Create ML template. Like the other model-backed views it
+  degrades gracefully on a bad/missing model (camera feed with no predictions, logged, reported via the
+  optional `onError` closure) and accepts a `camera: CameraOptions?`.
 - **Object detection.** A new `ObjectDetectorView` runs a Create ML / Core ML **Object Detector**
   model on the live camera feed and publishes the objects found in each frame. Two initializers are
   offered: one takes a `detectedObjects: Binding<[String]>` for the labels only, and one takes a
