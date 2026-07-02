@@ -55,6 +55,22 @@ go through `os.Logger`, and the public view API is unchanged from prior `master`
   controller was torn down while a block was queued). All `@Published` prediction updates are
   published on the main thread, and `PKLogger` is now `Sendable`.
 
+### Performance
+- The camera capture pipeline no longer allocates a `CIContext` for every frame; each
+  coordinator now reuses a single context, which is significantly cheaper and restores its
+  internal caching.
+
+### Deprecations & platform fixes
+- Removed all uses of the deprecated `VNRequest.usesCPUOnly`. This also fixes a latent bug:
+  the CPU-only path was gated on `#if canImport(XCTest)`, which is effectively always true, so
+  the library was forcing CPU-only inference **in production**. Image and hand-pose
+  classification now use the default (all available) compute units on device; the macOS
+  receiver tests pin `computeUnits = .cpuOnly` explicitly to stay deterministic.
+- Migrated `AVCaptureConnection.videoOrientation` (deprecated in iOS 17 / macOS 14) to
+  `videoRotationAngle` via a helper that falls back to the old API on earlier systems.
+- macOS now selects the system default video device (`AVCaptureDevice.default(for:)`) instead
+  of requesting a `.back`-position wide-angle camera, which returns `nil` on most Macs.
+
 ### CI
 - Removed a duplicate `actions/checkout` step from the Swift workflow, upgraded it to `v4`,
   pinned the simulator destination to `OS=latest`, and added `concurrency` cancellation.

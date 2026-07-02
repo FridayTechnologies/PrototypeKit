@@ -69,9 +69,12 @@ class CameraViewController: NSViewController {
             self.captureSession.commitConfiguration()
         }
         
-        guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera,
-                                                        for: .video,
-                                                        position: .back) else { return }
+        // Macs have no "back" camera; ask for the system default video device instead of a
+        // position-specific one, which would return nil on most Macs.
+        guard let videoDevice = AVCaptureDevice.default(for: .video) else {
+            PKLog.camera.error("No video capture device is available on this Mac.")
+            return
+        }
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice) else { return }
         
         guard captureSession.canAddInput(videoDeviceInput) else { return }
@@ -81,8 +84,8 @@ class CameraViewController: NSViewController {
         
         self.previewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
         self.previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        
-        self.previewLayer.connection?.videoOrientation = .portrait
+
+        self.previewLayer.connection?.pk_apply(.portrait)
         
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -117,7 +120,7 @@ class CameraViewController: NSViewController {
     
     override func viewWillTransition(to newSize: NSSize) {
         updatePreviewLayer()
-        self.previewLayer.connection?.videoOrientation = .portrait
+        self.previewLayer.connection?.pk_apply(.portrait)
     }
 }
 

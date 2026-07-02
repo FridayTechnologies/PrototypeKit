@@ -60,16 +60,6 @@ final class HandPoseClassifierReceiver: PKCameraViewReceiver, ObservableObject {
                                             orientation: .up,
                                             options: [:])
 
-#if targetEnvironment(simulator)
-        // Running in simulator
-        handPoseRequest.usesCPUOnly = true
-#endif
-
-#if canImport(XCTest)
-        // Running in XCTest
-        handPoseRequest.usesCPUOnly = true
-#endif
-
         do {
             try handler.perform([handPoseRequest])
         } catch {

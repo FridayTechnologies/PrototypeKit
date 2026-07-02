@@ -71,7 +71,10 @@ public struct PKCameraView: UIViewControllerRepresentable {
         var cameraViewController: CameraViewController
         
         private let receiverQueue = DispatchQueue(label: "receiverQueue")
-        
+
+        /// Reused across frames — creating a `CIContext` per frame is expensive and defeats its caching.
+        private let ciContext = CIContext(options: nil)
+
         init(_ cameraView: PKCameraView, receiver: PKCameraViewReceiver?) {
             self.cameraView = cameraView
             self.receiver = receiver
@@ -92,13 +95,11 @@ public struct PKCameraView: UIViewControllerRepresentable {
             
             if let imageBuffer = sampleBuffer.imageBuffer {
                 let ciImage = CIImage(cvPixelBuffer: imageBuffer)
-                
-                let context = CIContext(options: nil)
-                
-                guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+
+                guard let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent) else {
                     return
                 }
-                
+
                 receiver?.processImage(cgImage)
             }
         }
