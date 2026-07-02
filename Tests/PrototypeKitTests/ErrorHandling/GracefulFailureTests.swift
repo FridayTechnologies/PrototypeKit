@@ -34,6 +34,29 @@ final class GracefulFailureTests: XCTestCase {
         XCTAssertNoThrow(view.body)
     }
 
+    // MARK: - The optional onError hook is accepted and does not crash construction
+
+    func testImageClassifierViewAcceptsOnError() throws {
+        let view = ImageClassifierView(modelURL: bogusModelURL, onError: { _ in })
+        XCTAssertNoThrow(view.body)
+    }
+
+    func testHandPoseClassifierViewAcceptsOnError() throws {
+        let view = HandPoseClassifierView(modelURL: bogusModelURL, onError: { _ in })
+        XCTAssertNoThrow(view.body)
+    }
+
+    // MARK: - PrototypeKitError provides human-readable descriptions
+
+    func testPrototypeKitErrorDescriptions() {
+        let modelError = PrototypeKitError.modelLoadFailed(url: bogusModelURL, underlying: CocoaError(.fileNoSuchFile))
+        XCTAssertNotNil(modelError.errorDescription)
+        XCTAssertTrue(modelError.errorDescription?.contains(bogusModelURL.lastPathComponent) ?? false)
+
+        let soundError = PrototypeKitError.soundClassificationFailed(underlying: CocoaError(.fileReadUnknown))
+        XCTAssertNotNil(soundError.errorDescription)
+    }
+
     // MARK: - Receivers with no model must ignore frames rather than crash
 
     func testImageClassifierReceiverWithNilModelIgnoresFrames() throws {

@@ -285,14 +285,18 @@ extension View {
     ///     model's feature names. Defaults match a standard Create ML Activity Classifier.
     ///   - latestActivity: A binding updated with the most recently predicted activity label, or `nil`
     ///     when nothing has been classified yet.
+    ///   - onError: An optional closure called (on the main thread) if the model fails to load. The
+    ///     modifier stays inert; use this to surface the failure in your UI.
     /// - Returns: A view that classifies activity while visible.
     /// - Important: Activity classification relies on `CoreMotion` and is available on iOS only.
     public func classifyActivity(modelURL: URL,
                                  configuration: ActivityClassifierConfiguration = .init(),
-                                 latestActivity: Binding<String?>) -> some View {
+                                 latestActivity: Binding<String?>,
+                                 onError: ((PrototypeKitError) -> Void)? = nil) -> some View {
         modifier(ClassifyActivityModifier(modelURL: modelURL,
                                           configuration: configuration,
-                                          latestActivity: latestActivity))
+                                          latestActivity: latestActivity,
+                                          onError: onError))
     }
 }
 
@@ -302,11 +306,18 @@ struct ClassifyActivityModifier: ViewModifier {
 
     @Binding var latestActivity: String?
 
+    private let onError: ((PrototypeKitError) -> Void)?
+
+    private let loadError: PrototypeKitError?
+
     init(modelURL: URL,
          configuration: ActivityClassifierConfiguration,
-         latestActivity: Binding<String?>) {
+         latestActivity: Binding<String?>,
+         onError: ((PrototypeKitError) -> Void)? = nil) {
         self._latestActivity = latestActivity
+        self.onError = onError
         let loadedModel: MLModel?
+        var loadError: PrototypeKitError?
         do {
             loadedModel = try MLModel(contentsOf: modelURL)
         } catch {
@@ -314,14 +325,19 @@ struct ClassifyActivityModifier: ViewModifier {
             // when the model can't be loaded.
             PKLog.model.error("Failed to load activity model at \(modelURL.path): \(error.localizedDescription)")
             loadedModel = nil
+            loadError = .modelLoadFailed(url: modelURL, underlying: error)
         }
+        self.loadError = loadError
         self._receiver = StateObject(wrappedValue: ActivityClassifierReceiver(mlModel: loadedModel,
                                                                               configuration: configuration))
     }
 
     func body(content: Content) -> some View {
         content
-            .onAppear { receiver.start() }
+            .onAppear {
+                receiver.start()
+                if let loadError = loadError { onError?(loadError) }
+            }
             .onDisappear { receiver.stop() }
             .onReceive(receiver.$latestPrediction) { newPrediction in
                 guard let newPrediction = newPrediction else { return }
