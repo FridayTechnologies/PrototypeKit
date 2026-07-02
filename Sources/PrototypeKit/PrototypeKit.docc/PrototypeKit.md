@@ -60,6 +60,7 @@ directory for a runnable gallery covering every feature.
 
 - ``ImageClassifierView``
 - ``ObjectDetectorView``
+- ``DetectedObject``
 - ``HandPoseClassifierView``
 - ``LiveTextRecognizerView``
 - ``LiveBarcodeRecognizerView``

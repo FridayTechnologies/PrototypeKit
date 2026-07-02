@@ -135,19 +135,38 @@ struct ImageClassifierViewSample: View {
 ### `ObjectDetectorView` — live object detection (Core ML)
 
 Runs a Create ML / Core ML **Object Detector** model on each camera frame and publishes the
-labels of the objects found. Only the top label of each detected object is surfaced (bounding
-boxes and confidences are not exposed).
-
-Signature:
+objects found. There are two initializers — pick by whether you need only *what* was detected or
+also *where*:
 
 ```swift
+// Labels only:
 public init(modelURL: URL,
             detectedObjects: Binding<[String]> = .constant([]),
             camera: CameraOptions? = nil,
             onError: ((PrototypeKitError) -> Void)? = nil)
+
+// Labels + confidence + bounding boxes:
+public init(modelURL: URL,
+            detectedObjects: Binding<[DetectedObject]>,
+            camera: CameraOptions? = nil,
+            onError: ((PrototypeKitError) -> Void)? = nil)
 ```
 
-Full example:
+`DetectedObject` is a public value type:
+
+```swift
+public struct DetectedObject: Equatable {
+    public let label: String       // top Vision label
+    public let confidence: Float   // 0...1
+    public let boundingBox: CGRect // normalized (0...1), origin bottom-left (Vision convention)
+}
+```
+
+The overload is chosen by the binding's element type: pass `Binding<[String]>` for labels only, or
+`Binding<[DetectedObject]>` for positions. Vision's bounding-box origin is bottom-left, so flip the
+`y` axis (`1 - boundingBox.midY`) when positioning a SwiftUI overlay.
+
+Full example (labels only):
 
 ```swift
 import SwiftUI
@@ -164,6 +183,37 @@ struct ObjectDetectorViewSample: View {
             ScrollView {
                 ForEach(Array(detectedObjects.enumerated()), id: \.offset) { index, object in
                     Text(object)
+                }
+            }
+        }
+    }
+}
+```
+
+Full example (bounding boxes):
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct ObjectDetectorBoxesSample: View {
+    @State var detectedObjects: [DetectedObject] = []
+
+    var body: some View {
+        ZStack {
+            ObjectDetectorView(modelURL: MyObjectDetector.urlOfModelInThisBundle,
+                               detectedObjects: $detectedObjects)
+
+            GeometryReader { geometry in
+                ForEach(Array(detectedObjects.enumerated()), id: \.offset) { _, object in
+                    let box = object.boundingBox
+                    Rectangle()
+                        .stroke(.red, lineWidth: 2)
+                        .frame(width: box.width * geometry.size.width,
+                               height: box.height * geometry.size.height)
+                        .position(x: box.midX * geometry.size.width,
+                                  y: (1 - box.midY) * geometry.size.height)
+                        .overlay(Text(object.label))
                 }
             }
         }

@@ -197,6 +197,51 @@ struct ObjectDetectorViewSample: View {
 ```
 </details>
 
+Need to know **where** each object is (for example, to draw bounding boxes)? Bind an array of
+`DetectedObject` instead of `[String]`. Each `DetectedObject` carries the `label`, a `confidence`
+(`0`–`1`), and a normalized `boundingBox` (`CGRect`, origin bottom-left as Vision reports it):
+
+```swift
+ObjectDetectorView(modelURL: MyObjectDetector.urlOfModelInThisBundle,
+                   detectedObjects: $detectedObjects) // $detectedObjects is [DetectedObject]
+```
+
+<details>
+<summary>Full Example (with bounding boxes)</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct ObjectDetectorBoxesSample: View {
+
+    @State var detectedObjects: [DetectedObject] = []
+
+    var body: some View {
+        ZStack {
+            ObjectDetectorView(modelURL: MyObjectDetector.urlOfModelInThisBundle,
+                               detectedObjects: $detectedObjects)
+
+            GeometryReader { geometry in
+                ForEach(Array(detectedObjects.enumerated()), id: \.offset) { _, object in
+                    let box = object.boundingBox
+                    Rectangle()
+                        .stroke(.red, lineWidth: 2)
+                        // Vision's origin is bottom-left; SwiftUI's is top-left, so flip Y.
+                        .frame(width: box.width * geometry.size.width,
+                               height: box.height * geometry.size.height)
+                        .position(x: box.midX * geometry.size.width,
+                                  y: (1 - box.midY) * geometry.size.height)
+                        .overlay(Text(object.label))
+                }
+            }
+        }
+    }
+}
+```
+</details>
+
 
 ### Live Hand Pose Classification
 

@@ -6,13 +6,19 @@ argument-hint: "[optional: Core ML model class name, e.g. MyObjectDetector]"
 Add live camera object detection using PrototypeKit's `ObjectDetectorView`.
 Follow the exact API in the `prototypekit` skill.
 
-Signature to use:
-`ObjectDetectorView(modelURL:, detectedObjects: Binding<[String]>, camera: CameraOptions? = nil, onError: ((PrototypeKitError) -> Void)? = nil)`.
+Signatures to use (pick based on whether the user needs positions):
+`ObjectDetectorView(modelURL:, detectedObjects: Binding<[String]>, camera: CameraOptions? = nil, onError: ((PrototypeKitError) -> Void)? = nil)` — labels only.
+`ObjectDetectorView(modelURL:, detectedObjects: Binding<[DetectedObject]>, camera: CameraOptions? = nil, onError: ((PrototypeKitError) -> Void)? = nil)` — labels + confidence + bounding boxes.
+
+`DetectedObject` exposes `label: String`, `confidence: Float`, and `boundingBox: CGRect` (normalized,
+origin bottom-left as Vision reports it — flip Y for SwiftUI overlays).
 
 1. Generate a SwiftUI `View` that:
-   - declares `@State var detectedObjects: [String] = []`,
+   - declares `@State var detectedObjects: [String] = []` (or `[DetectedObject]` if the user wants
+     positions / bounding boxes),
    - embeds `ObjectDetectorView(modelURL: <Model>.urlOfModelInThisBundle, detectedObjects: $detectedObjects)`,
-   - displays the detected object labels (e.g. a `ScrollView` + `ForEach`).
+   - displays the detected objects (a `ScrollView` + `ForEach` of labels, or a bounding-box overlay
+     using each `DetectedObject`'s `boundingBox`).
    Use the model class name from `$ARGUMENTS` if provided; otherwise use a clear
    placeholder like `MyObjectDetector` and tell the user to replace it.
 2. Ensure `import SwiftUI` and `import PrototypeKit`.

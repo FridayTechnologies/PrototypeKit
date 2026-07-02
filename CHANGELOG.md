@@ -10,10 +10,13 @@ once tagged releases begin.
 
 ### Added
 - **Object detection.** A new `ObjectDetectorView` runs a Create ML / Core ML **Object Detector**
-  model on the live camera feed and publishes the labels of the objects found in each frame through a
-  `detectedObjects: Binding<[String]>`. Like the other model-backed views it degrades gracefully on a
-  bad/missing model (camera feed with no detections, logged, reported via the optional `onError`
-  closure) and accepts a `camera: CameraOptions?`.
+  model on the live camera feed and publishes the objects found in each frame. Two initializers are
+  offered: one takes a `detectedObjects: Binding<[String]>` for the labels only, and one takes a
+  `detectedObjects: Binding<[DetectedObject]>` — a new public value type carrying each object's
+  `label`, `confidence`, and normalized `boundingBox` — so you can draw bounding boxes or reason about
+  position. Like the other model-backed views it degrades gracefully on a bad/missing model (camera
+  feed with no detections, logged, reported via the optional `onError` closure) and accepts a
+  `camera: CameraOptions?`.
 - **Error reporting.** A public `PrototypeKitError` type and an optional `onError` closure on the
   entry points that can fail at setup time: `ImageClassifierView`, `HandPoseClassifierView`, the
   `classifyActivity(...)` modifier (model-load failures), and the `recognizeSounds(...)` modifier

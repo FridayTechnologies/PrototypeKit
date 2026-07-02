@@ -24,6 +24,7 @@ struct ExampleGallery: View {
                     NavigationLink("Face detection", destination: FaceCountExample())
                     NavigationLink("Image classification", destination: ImageClassifierExample())
                     NavigationLink("Object detection", destination: ObjectDetectorExample())
+                    NavigationLink("Object detection (boxes)", destination: ObjectDetectorBoxesExample())
                 }
                 Section("Sound") {
                     NavigationLink("Sound recognition", destination: SoundExample())
@@ -140,6 +141,52 @@ struct ObjectDetectorExample: View {
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(.thinMaterial)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// Detects objects and draws a bounding box + label around each one.
+///
+/// Replace `modelURL` with your own model, e.g. `MyObjectDetector.urlOfModelInThisBundle`.
+struct ObjectDetectorBoxesExample: View {
+    @State private var detectedObjects: [DetectedObject] = []
+    @State private var errorMessage: String?
+
+    private let modelURL = URL(fileURLWithPath: "/path/to/YourObjectDetector.mlmodelc")
+
+    var body: some View {
+        ZStack {
+            ObjectDetectorView(modelURL: modelURL,
+                               detectedObjects: $detectedObjects) { error in
+                errorMessage = error.localizedDescription
+            }
+
+            GeometryReader { geometry in
+                ForEach(Array(detectedObjects.enumerated()), id: \.offset) { _, object in
+                    let box = object.boundingBox
+                    Rectangle()
+                        .stroke(.red, lineWidth: 2)
+                        // Vision's origin is bottom-left; SwiftUI's is top-left, so flip Y.
+                        .frame(width: box.width * geometry.size.width,
+                               height: box.height * geometry.size.height)
+                        .position(x: box.midX * geometry.size.width,
+                                  y: (1 - box.midY) * geometry.size.height)
+                        .overlay(
+                            Text(object.label)
+                                .font(.caption2)
+                                .padding(2)
+                                .background(.red)
+                                .foregroundStyle(.white)
+                                .position(x: box.midX * geometry.size.width,
+                                          y: (1 - box.maxY) * geometry.size.height)
+                        )
+                }
+            }
+
+            if let errorMessage = errorMessage {
+                Text(errorMessage).foregroundStyle(.red).padding().background(.thinMaterial)
+            }
         }
         .ignoresSafeArea()
     }
