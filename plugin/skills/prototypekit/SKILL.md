@@ -6,7 +6,8 @@ description: >-
   user is building with PrototypeKit or asks for a live camera feed, on-device
   image classification, live text/OCR recognition, barcode scanning, animal
   recognition, face detection, body pose detection, rectangle detection, hand-pose
-  classification, or sound recognition in a SwiftUI app. Provides exact
+  classification, sound recognition, or natural-language analysis (sentiment,
+  language identification, named-entity recognition) in a SwiftUI app. Provides exact
   initializer signatures, @State/@Binding wiring, required Info.plist privacy
   keys, and Core ML model setup.
 ---
@@ -395,6 +396,44 @@ Custom model + configuration:
 )
 ```
 
+### Natural Language — text analysis (no camera, mic, permissions, or model)
+
+Three `View` modifiers wrap Apple's `NaturalLanguage` framework. They need no camera,
+microphone, privacy keys, or Core ML model, and work on **both iOS and macOS**. Each
+re-runs whenever the `text` you pass changes, updating a binding with the result.
+
+Signatures:
+
+```swift
+public func analyzeSentiment(text: String, score: Binding<Double>) -> some View
+public func identifyLanguage(text: String, language: Binding<String?>) -> some View
+public func tagEntities(text: String, entities: Binding<[String]>) -> some View
+```
+
+- `analyzeSentiment` — `score` ranges from `-1` (very negative) to `1` (very positive); `0` is neutral.
+- `identifyLanguage` — `language` is a BCP-47 code (e.g. `"en"`, `"fr"`), or `nil` if undetermined.
+- `tagEntities` — `entities` are the recognized people, place, and organization names.
+
+Full example (sentiment):
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct SentimentView: View {
+    @State var text: String = "I love this!"
+    @State var score: Double = 0
+
+    var body: some View {
+        VStack {
+            TextField("Type something", text: $text)
+            Text("Sentiment: \(score, specifier: "%.2f")")
+        }
+        .analyzeSentiment(text: text, score: $score)
+    }
+}
+```
+
 ## Gotchas
 
 - **Missing privacy key = crash.** Add `NSCameraUsageDescription` (camera views)
@@ -408,3 +447,6 @@ Custom model + configuration:
   macOS. Gate calls with `if #available(iOS 15.0, *)` where needed.
 - Prediction/detection values arrive asynchronously through the `@Binding`s; drive
   other SwiftUI views off those state variables as usual.
+- **Natural Language modifiers** (`analyzeSentiment`, `identifyLanguage`, `tagEntities`)
+  are the exception to most of the above: no camera/mic, no privacy keys, no Core ML
+  model, and they run on macOS too. They re-analyse whenever the `text` argument changes.

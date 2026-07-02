@@ -494,6 +494,116 @@ struct ActivityClassifierViewSample: View {
 ```
 </details>
 
+## Text Tasks
+
+Analyse text on-device with Apple's Natural Language framework. Unlike the camera and sound features,
+these need **no camera, microphone, permissions, or Core ML model** — everything ships with the OS, and
+they work on both iOS and macOS. That makes them the gentlest way to get started with on-device ML.
+
+Each is a `View` modifier that re-runs whenever the `text` you pass in changes, updating a binding with
+the result.
+
+### Sentiment Analysis
+
+Score how positive or negative a piece of text is, from `-1` (very negative) to `1` (very positive).
+
+```swift
+.analyzeSentiment(text: text, score: $score)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct SentimentView: View {
+
+    @State var text: String = "I love this!"
+    @State var score: Double = 0
+
+    var body: some View {
+        VStack {
+            TextField("Type something", text: $text)
+            Text("Sentiment: \(score, specifier: "%.2f")")
+        }
+        .analyzeSentiment(text: text, score: $score)
+    }
+}
+```
+</details>
+
+### Language Identification
+
+Detect the dominant language of a piece of text as a BCP-47 code (for example `en`, `fr`).
+
+```swift
+.identifyLanguage(text: text, language: $language)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct LanguageView: View {
+
+    @State var text: String = "Bonjour tout le monde"
+    @State var language: String?
+
+    var body: some View {
+        VStack {
+            TextField("Type something", text: $text)
+            Text("Language: \(language ?? "Detecting…")")
+        }
+        .identifyLanguage(text: text, language: $language)
+    }
+}
+```
+</details>
+
+### Named Entity Recognition
+
+Extract the people, places, and organizations mentioned in a piece of text.
+
+```swift
+.tagEntities(text: text, entities: $entities)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct EntitiesView: View {
+
+    @State var text: String = "Tim Cook announced the news in London."
+    @State var entities: [String] = []
+
+    var body: some View {
+        VStack {
+            TextField("Type something", text: $text)
+
+            ScrollView {
+                ForEach(Array(entities.enumerated()), id: \.offset) { index, entity in
+                    Text(entity)
+                }
+            }
+        }
+        .tagEntities(text: text, entities: $entities)
+    }
+}
+```
+</details>
+
 ## FAQs
 
 <details>

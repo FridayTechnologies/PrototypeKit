@@ -62,4 +62,10 @@ struct ContentView: View {
 
 - ``SwiftUI/View/classifyActivity(modelURL:configuration:latestActivity:)``
 - ``ActivityClassifierConfiguration``
+
+### Natural Language
+
+- ``SwiftUI/View/analyzeSentiment(text:score:)``
+- ``SwiftUI/View/identifyLanguage(text:language:)``
+- ``SwiftUI/View/tagEntities(text:entities:)``
 </content>
