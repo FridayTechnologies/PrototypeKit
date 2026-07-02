@@ -13,7 +13,7 @@ import os
 /// `OSLogMessage` privacy interpolation — messages are logged with `.public` privacy here, in
 /// one place. PrototypeKit only ever logs developer-facing diagnostics (never user data), so
 /// public privacy is appropriate and keeps the messages readable in Console.app.
-struct PKLogger {
+struct PKLogger: Sendable {
 
     private let logger: Logger
 

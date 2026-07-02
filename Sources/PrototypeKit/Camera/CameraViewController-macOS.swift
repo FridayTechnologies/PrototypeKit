@@ -25,8 +25,8 @@ class CameraViewController: NSViewController {
         guard checkDeveloperHasConfiguredInfoPlist() else { return }
         checkPermission()
 
-        sessionQueue.async { [unowned self] in
-            guard permissionGranted else { return }
+        sessionQueue.async { [weak self] in
+            guard let self = self, self.permissionGranted else { return }
             self.setupCaptureSession()
             self.captureSession.startRunning()
         }
@@ -55,7 +55,8 @@ class CameraViewController: NSViewController {
     func requestPermission() {
         guard checkDeveloperHasConfiguredInfoPlist() else { return }
         sessionQueue.suspend()
-        AVCaptureDevice.requestAccess(for: .video) { [unowned self] granted in
+        AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+            guard let self = self else { return }
             self.permissionGranted = granted
             self.sessionQueue.resume()
         }

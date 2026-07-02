@@ -41,9 +41,19 @@ go through `os.Logger`, and the public view API is unchanged from prior `master`
 - The camera view controllers now act on the `NSCameraUsageDescription` check: when the key
   is missing, iOS shows a clear on-screen message instead of a black preview.
 
+### Added
+- **Privacy manifest.** Ships a `PrivacyInfo.xcprivacy` in the library's resource bundle
+  declaring no tracking, no data collection, and no "required reason" API usage — so apps that
+  embed PrototypeKit get an accurate App Store privacy report. (Camera/microphone usage strings
+  remain the host app's responsibility.)
+
 ### Fixed
 - The simulator placeholder message on iOS now activates its width constraint (previously it
   was created but never applied) and wraps long text.
+- **Concurrency safety.** Replaced `[unowned self]` with `[weak self]` in the camera
+  controllers' async permission/session blocks (an `unowned` reference would crash if the
+  controller was torn down while a block was queued). All `@Published` prediction updates are
+  published on the main thread, and `PKLogger` is now `Sendable`.
 
 ### CI
 - Removed a duplicate `actions/checkout` step from the Swift workflow, upgraded it to `v4`,

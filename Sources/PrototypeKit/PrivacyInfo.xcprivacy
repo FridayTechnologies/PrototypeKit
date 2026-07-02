@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  PrototypeKit performs all machine-learning inference on-device using Apple's
+	  Vision, Core ML, Sound Analysis, Natural Language and Core Motion frameworks.
+	  It does not collect, store, or transmit any user data off the device, does not
+	  track users, and does not call any of Apple's "required reason" APIs.
+
+	  Camera and microphone access are governed by the NSCameraUsageDescription and
+	  NSMicrophoneUsageDescription keys, which the *host app* declares — a library
+	  cannot declare usage-description strings on the app's behalf.
+	-->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array/>
+</dict>
+</plist>
