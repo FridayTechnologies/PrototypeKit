@@ -33,7 +33,10 @@ final class ImageClassifierTest: XCTestCase {
 
     #if os(macOS)
     func testICReceiverMac() throws {
-        let mlModel = try MLModel(contentsOf: FruitClassifier.urlOfModelInThisBundle)
+        let configuration = MLModelConfiguration()
+        configuration.computeUnits = .cpuOnly
+        let mlModel = try MLModel(contentsOf: FruitClassifier.urlOfModelInThisBundle,
+                                  configuration: configuration)
         let vnModel = try VNCoreMLModel(for: mlModel)
         let receiver = ImageClassifierReceiver(vnMLModel: vnModel)
         

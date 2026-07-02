@@ -7,6 +7,7 @@
 
 import XCTest
 import Vision
+import CoreML
 import Combine
 
 @testable import PrototypeKit
@@ -25,7 +26,10 @@ final class HandPoseClassifierViewTests: XCTestCase {
 
 #if os(macOS)
 func testHPCReceiverMac() throws {
-    let mlModel = try MLModel(contentsOf: HandPoseClassifier.urlOfModelInThisBundle)
+    let configuration = MLModelConfiguration()
+    configuration.computeUnits = .cpuOnly
+    let mlModel = try MLModel(contentsOf: HandPoseClassifier.urlOfModelInThisBundle,
+                              configuration: configuration)
     let receiver = HandPoseClassifierReceiver(mlModel: mlModel)
     
     let imageURL = Bundle.module.url(forResource: "force-expand",

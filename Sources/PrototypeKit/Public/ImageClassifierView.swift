@@ -46,15 +46,6 @@ final class ImageClassifierReceiver: PKCameraViewReceiver, ObservableObject {
                                             orientation: .up,
                                             options: [:])
 
-#if targetEnvironment(simulator)
-        // Running in simulator
-        request.usesCPUOnly = true
-#endif
-
-#if canImport(XCTest)
-        // Running in XCTest
-        request.usesCPUOnly = true
-#endif
         request.imageCropAndScaleOption = .centerCrop
         do {
             try handler.perform([request])

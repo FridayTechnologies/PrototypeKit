@@ -137,8 +137,8 @@ class CameraViewController: UIViewController {
         
         self.previewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
         self.previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        
-        self.previewLayer.connection?.videoOrientation = .portrait
+
+        self.previewLayer.connection?.pk_apply(.portrait)
         
         DispatchQueue.main.async { [weak self] in
             guard self != nil else { return }
@@ -173,13 +173,13 @@ class CameraViewController: UIViewController {
         updatePreviewLayer()
         switch UIDevice.current.orientation {
         case UIDeviceOrientation.portraitUpsideDown:
-            self.previewLayer.connection?.videoOrientation = .portraitUpsideDown
+            self.previewLayer.connection?.pk_apply(.portraitUpsideDown)
         case UIDeviceOrientation.landscapeLeft:
-            self.previewLayer.connection?.videoOrientation = .landscapeRight
+            self.previewLayer.connection?.pk_apply(.landscapeRight)
         case UIDeviceOrientation.landscapeRight:
-            self.previewLayer.connection?.videoOrientation = .landscapeLeft
+            self.previewLayer.connection?.pk_apply(.landscapeLeft)
         case UIDeviceOrientation.portrait:
-            self.previewLayer.connection?.videoOrientation = .portrait
+            self.previewLayer.connection?.pk_apply(.portrait)
         default:
             break
         }
