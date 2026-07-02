@@ -16,6 +16,11 @@ once tagged releases begin.
   these failures — show a message, offer a retry — instead of only reading the log. The parameter
   defaults to `nil`, so existing call sites are unaffected, and errors are still logged as before.
   Transient per-frame Vision errors remain log-only by design.
+- **Documentation & examples.** Enriched the DocC catalog and added a `Docs` workflow that builds
+  and publishes it to GitHub Pages; a runnable `Examples/` gallery covering every feature; and a
+  `SECURITY.md` vulnerability-reporting policy.
+- **Localization.** The user-facing camera placeholder messages now go through `NSLocalizedString`
+  with an `en` string table (`defaultLocalization: "en"`), so they can be translated.
 
 ## [0.1.0] - 2026-07-02
 

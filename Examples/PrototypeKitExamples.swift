@@ -1,0 +1,181 @@
+//
+//  PrototypeKitExamples.swift
+//
+//  Reference examples for PrototypeKit. Copy this file into your own SwiftUI app target.
+//  This file is intentionally NOT part of the Swift package (it lives under Examples/), so it is
+//  never compiled by the library — it's a copy-paste starting point.
+//
+//  Set `ExampleGallery()` as your app's root view. See Examples/README.md for the Info.plist keys
+//  each feature needs (camera / microphone).
+//
+
+#if os(iOS)
+import SwiftUI
+import PrototypeKit
+
+/// A menu linking to a demo for each PrototypeKit feature.
+struct ExampleGallery: View {
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Camera + Vision") {
+                    NavigationLink("Live text", destination: LiveTextExample())
+                    NavigationLink("Live barcodes", destination: LiveBarcodeExample())
+                    NavigationLink("Face detection", destination: FaceCountExample())
+                    NavigationLink("Image classification", destination: ImageClassifierExample())
+                }
+                Section("Sound") {
+                    NavigationLink("Sound recognition", destination: SoundExample())
+                }
+                Section("Motion") {
+                    NavigationLink("Activity classification", destination: ActivityExample())
+                }
+                Section("Natural Language") {
+                    NavigationLink("Sentiment", destination: SentimentExample())
+                }
+            }
+            .navigationTitle("PrototypeKit")
+        }
+    }
+}
+
+// MARK: - Camera + Vision (no model required)
+
+/// Recognizes text in the live camera feed and lists it.
+struct LiveTextExample: View {
+    @State private var detectedText: [String] = []
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            LiveTextRecognizerView(detectedText: $detectedText)
+            Text(detectedText.joined(separator: "\n"))
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(.thinMaterial)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// Decodes barcodes/QR codes in the live camera feed.
+struct LiveBarcodeExample: View {
+    @State private var barcodes: [String] = []
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            LiveBarcodeRecognizerView(detectedBarcodes: $barcodes)
+            Text(barcodes.first ?? "Point the camera at a barcode")
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(.thinMaterial)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// Counts faces in the live camera feed.
+struct FaceCountExample: View {
+    @State private var faceCount = 0
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            LiveFaceDetectorView(faceCount: $faceCount)
+            Text("Faces: \(faceCount)")
+                .font(.title2.bold())
+                .padding()
+                .background(.thinMaterial, in: Capsule())
+                .padding(.top, 60)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+// MARK: - Camera + Core ML (bring your own Create ML model)
+
+/// Classifies each camera frame with a Create ML image classifier.
+///
+/// Replace `modelURL` with your own model, e.g. `FruitClassifier.urlOfModelInThisBundle`.
+struct ImageClassifierExample: View {
+    @State private var prediction = ""
+    @State private var errorMessage: String?
+
+    // Point this at your Create ML model's `urlOfModelInThisBundle`.
+    private let modelURL = URL(fileURLWithPath: "/path/to/YourModel.mlmodelc")
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            ImageClassifierView(modelURL: modelURL,
+                                latestPrediction: $prediction) { error in
+                // React to a model-load failure instead of showing a silent, prediction-less feed.
+                errorMessage = error.localizedDescription
+            }
+            Text(errorMessage ?? (prediction.isEmpty ? "Classifying…" : prediction))
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(.thinMaterial)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+// MARK: - Sound
+
+/// Recognizes sounds from the microphone using the built-in classifier.
+struct SoundExample: View {
+    @State private var recognizedSound: String?
+    @State private var errorMessage: String?
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(recognizedSound ?? "Listening…")
+                .font(.title)
+            if let errorMessage = errorMessage {
+                Text(errorMessage).foregroundStyle(.red).font(.footnote)
+            }
+        }
+        .recognizeSounds(recognizedSound: $recognizedSound) { error in
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+// MARK: - Motion
+
+/// Classifies device activity with a Create ML activity classifier.
+///
+/// Replace `modelURL` with your own model, e.g. `ActivityClassifier.urlOfModelInThisBundle`.
+struct ActivityExample: View {
+    @State private var activity: String?
+    @State private var errorMessage: String?
+
+    private let modelURL = URL(fileURLWithPath: "/path/to/YourActivityModel.mlmodelc")
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(activity ?? "Detecting…").font(.title)
+            if let errorMessage = errorMessage {
+                Text(errorMessage).foregroundStyle(.red).font(.footnote)
+            }
+        }
+        .classifyActivity(modelURL: modelURL, latestActivity: $activity) { error in
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+// MARK: - Natural Language (ships with the OS, no camera/mic/model)
+
+/// Scores the sentiment of some text as you type.
+struct SentimentExample: View {
+    @State private var text = "I love prototyping with this!"
+    @State private var score: Double = 0
+
+    var body: some View {
+        Form {
+            TextField("Type something", text: $text, axis: .vertical)
+            Text("Sentiment: \(score, specifier: "%.2f")")
+                .analyzeSentiment(text: text, score: $score)
+        }
+    }
+}
+#endif

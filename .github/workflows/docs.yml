@@ -1,0 +1,61 @@
+# Builds the DocC documentation and publishes it to GitHub Pages.
+#
+# One-time setup: in the repository settings, set Pages → Build and deployment → Source to
+# "GitHub Actions". The site is then served at https://fridaytechnologies.github.io/PrototypeKit/.
+
+name: Docs
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; don't cancel an in-progress one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build DocC archive
+      run: >
+        xcodebuild docbuild
+        -scheme PrototypeKit
+        -destination 'generic/platform=iOS'
+        -derivedDataPath .derivedData
+
+    - name: Transform for static hosting
+      run: |
+        ARCHIVE=$(find .derivedData -type d -name 'PrototypeKit.doccarchive' | head -n 1)
+        if [ -z "$ARCHIVE" ]; then
+          echo "::error::PrototypeKit.doccarchive not found under .derivedData"
+          exit 1
+        fi
+        "$(xcrun --find docc)" process-archive transform-for-static-hosting "$ARCHIVE" \
+          --output-path _site \
+          --hosting-base-path PrototypeKit
+
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

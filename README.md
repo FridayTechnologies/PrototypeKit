@@ -58,6 +58,14 @@ dependencies: [
 > `.upToNextMinor(from: "0.1.0")` if you need stricter guarantees. See the
 > [CHANGELOG](CHANGELOG.md) for what's in each release.
 
+## Documentation & examples 📚
+
+- **API reference** — DocC documentation is published to GitHub Pages:
+  <https://fridaytechnologies.github.io/PrototypeKit/documentation/prototypekit>
+- **Sample code** — the [`Examples/`](Examples) directory contains a runnable SwiftUI gallery
+  covering every feature; copy [`PrototypeKitExamples.swift`](Examples/PrototypeKitExamples.swift)
+  into an app to try them.
+
 # Examples
 
 Here are a few basic examples you can use today.
