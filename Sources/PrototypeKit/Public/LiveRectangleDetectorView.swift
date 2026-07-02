@@ -26,7 +26,7 @@ final class LiveRectangleDetectorReceiver: PKCameraViewReceiver, ObservableObjec
         do {
             try requestHandler.perform([request])
         } catch {
-            print("Unable to process image for rectangle detection")
+            PKLog.vision.error("Unable to process image for rectangle detection: \(error.localizedDescription)")
         }
     }
 }

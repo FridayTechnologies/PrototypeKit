@@ -34,13 +34,19 @@ class CameraViewController: UIViewController {
     }
     
     override func viewDidLoad() {
-        checkDeveloperHasConfiguredInfoPlist()
+        // Surface a clear, on-screen message instead of a black preview when the host app hasn't
+        // declared the camera usage description — a mistake that otherwise looks like a broken camera.
+        guard checkDeveloperHasConfiguredInfoPlist() else {
+            presentCenteredMessage(icon: "⚠️",
+                                   text: "Camera unavailable: add the \"Privacy - Camera Usage Description\" (NSCameraUsageDescription) key to your app's Info settings. See the PrototypeKit setup guide.")
+            return
+        }
         #if targetEnvironment(simulator)
         checkAndHandleSimulator()
                 return
         #endif
         checkPermission()
-        
+
         sessionQueue.async { [unowned self] in
             guard permissionGranted else { return }
             self.setupCaptureSession()
@@ -61,31 +67,40 @@ class CameraViewController: UIViewController {
     
     func checkAndHandleSimulator() {
 #if targetEnvironment(simulator)
+        presentCenteredMessage(icon: "📸", text: "Live camera is not supported in previews.")
+#endif
+    }
+
+    /// Shows a centered icon and message in place of the camera preview.
+    func presentCenteredMessage(icon: String, text: String) {
         view.backgroundColor = .gray
-        
+
         let iconLabel = UILabel(frame: .zero)
-        iconLabel.text = "📸"
+        iconLabel.text = icon
         iconLabel.font = .preferredFont(forTextStyle: .largeTitle)
-        
+
         let warningLabel = UILabel(frame: .zero)
-        warningLabel.text = "Live camera is not supported in previews."
-        
+        warningLabel.text = text
+        warningLabel.numberOfLines = 0
+        warningLabel.textAlignment = .center
+
         let stackView = UIStackView(arrangedSubviews: [ iconLabel, warningLabel ])
         stackView.axis = .vertical
         stackView.alignment = .center
-        
+        stackView.spacing = 8
+
         view.addSubview(stackView)
 
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
-        stackView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9)
-#endif
+        stackView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9).isActive = true
     }
-    
+
+    @discardableResult
     func checkDeveloperHasConfiguredInfoPlist() -> Bool {
-        guard let usageDescription = Bundle.main.object(forInfoDictionaryKey: "NSCameraUsageDescription") as? String else {
-            print("⚠️⚠️⚠️ You need to set NSCameraUsageDescription. See Setup on https://github.com/FridayTechnologies/PrototypeKit on how to set this up. ⚠️⚠️⚠️")
+        guard Bundle.main.object(forInfoDictionaryKey: "NSCameraUsageDescription") is String else {
+            PKLog.camera.error("Missing NSCameraUsageDescription. Add the \"Privacy - Camera Usage Description\" key to your app's Info settings. See https://github.com/FridayTechnologies/PrototypeKit for setup.")
             return false
         }
         return true

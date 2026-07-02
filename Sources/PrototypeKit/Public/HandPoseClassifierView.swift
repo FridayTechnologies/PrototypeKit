@@ -10,13 +10,18 @@ import CoreML
 import Vision
 
 final class HandPoseClassifierReceiver: PKCameraViewReceiver, ObservableObject {
-    
-    private let mlModel: MLModel
-    
+
+    private let mlModel: MLModel?
+
     @Published var latestPrediction: String?
-    
-    private lazy var handPoseRequest = {
-        let req = VNDetectHumanHandPoseRequest { request, error in
+
+    private lazy var handPoseRequest: VNDetectHumanHandPoseRequest? = {
+        guard let model = self.mlModel else { return nil }
+        let req = VNDetectHumanHandPoseRequest { [weak self] request, error in
+            if let error = error {
+                PKLog.vision.error("Hand pose request failed: \(error.localizedDescription)")
+                return
+            }
             guard
                 let handRequest = request as? VNDetectHumanHandPoseRequest,
                 let handposes = handRequest.results,
@@ -25,39 +30,51 @@ final class HandPoseClassifierReceiver: PKCameraViewReceiver, ObservableObject {
                 let fp = try? MLDictionaryFeatureProvider(dictionary: [
                     "poses": multiArray
                 ]),
-                let prediction = try? self.mlModel.prediction(from: fp)
+                let prediction = try? model.prediction(from: fp)
             else { return }
-            
+
             if let label = prediction.featureValue(for: "label") {
-                self.latestPrediction = label.stringValue
+                DispatchQueue.main.async {
+                    self?.latestPrediction = label.stringValue
+                }
             }
-            
+
         }
         req.revision = 1
         req.maximumHandCount = 1
         return req
     }()
-    
-    init(mlModel: MLModel) {
+
+    /// Creates a receiver for the given hand-pose model.
+    ///
+    /// - Parameter mlModel: The Core ML hand-pose classification model, or `nil` when the model failed
+    ///   to load. When `nil`, frames are ignored and no predictions are published.
+    init(mlModel: MLModel?) {
         self.mlModel = mlModel
     }
-    
+
     func processImage(_ cgImage: CGImage) {
+        guard let handPoseRequest = handPoseRequest else { return }
+
         let handler = VNImageRequestHandler(cgImage: cgImage,
                                             orientation: .up,
                                             options: [:])
-        
+
 #if targetEnvironment(simulator)
         // Running in simulator
         handPoseRequest.usesCPUOnly = true
 #endif
-        
+
 #if canImport(XCTest)
         // Running in XCTest
         handPoseRequest.usesCPUOnly = true
 #endif
-        
-        try! handler.perform([handPoseRequest])
+
+        do {
+            try handler.perform([handPoseRequest])
+        } catch {
+            PKLog.vision.error("Failed to perform hand pose detection: \(error.localizedDescription)")
+        }
     }
 }
 
@@ -90,12 +107,15 @@ public struct HandPoseClassifierView: View {
     ///   - latestPrediction: A binding updated with the most recent predicted hand-pose label. Defaults to a
     ///     constant empty string when you only need the on-screen camera feed.
     public init(modelURL: URL, latestPrediction: Binding<String> = .constant("")) {
+        self._latestPrediction = latestPrediction
         do {
             let mlModel = try MLModel(contentsOf: modelURL)
             self.receiver = HandPoseClassifierReceiver(mlModel: mlModel)
-            self._latestPrediction = latestPrediction
         } catch {
-            fatalError() // TODO: Make this prettier.
+            // Degrade gracefully: show the camera feed without classification rather than
+            // crashing the host app when the model can't be loaded.
+            PKLog.model.error("Failed to load hand pose model at \(modelURL.path): \(error.localizedDescription)")
+            self.receiver = HandPoseClassifierReceiver(mlModel: nil)
         }
     }
     

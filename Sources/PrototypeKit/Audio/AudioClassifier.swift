@@ -68,7 +68,10 @@ final class SystemAudioClassifier: NSObject {
         case .authorized:
             hasMicrophoneAccess = true
         @unknown default:
-            fatalError("unknown authorization status for microphone access")
+            // A future authorization status we don't recognize — treat it as no access rather than
+            // crashing, and surface the error through the normal channel below.
+            PKLog.audio.error("Unknown microphone authorization status; treating as no access.")
+            hasMicrophoneAccess = false
         }
 
         if !hasMicrophoneAccess {

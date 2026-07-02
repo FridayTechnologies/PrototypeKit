@@ -23,7 +23,7 @@ final class LiveBodyPoseDetectorReceiver: PKCameraViewReceiver, ObservableObject
         do {
             try requestHandler.perform([request])
         } catch {
-            print("Unable to process image for body pose detection")
+            PKLog.vision.error("Unable to process image for body pose detection: \(error.localizedDescription)")
         }
     }
 }

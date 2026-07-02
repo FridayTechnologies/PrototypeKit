@@ -32,7 +32,7 @@ final class LiveBarcodeRecognizerReceiver: PKCameraViewReceiver, ObservableObjec
         do {
             try requestHandler.perform([request])
         } catch {
-            print("Unable to process image for barcode detection")
+            PKLog.vision.error("Unable to process image for barcode detection: \(error.localizedDescription)")
         }
     }
 }

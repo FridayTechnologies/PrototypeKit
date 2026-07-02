@@ -604,10 +604,34 @@ struct EntitiesView: View {
 ```
 </details>
 
+## Diagnostics & error handling 🩺
+
+PrototypeKit is designed to fail gracefully — it will **not** crash your app on bad input:
+
+- If a Core ML model can't be loaded (wrong URL, incompatible model), the affected view still
+  shows the camera feed but produces no predictions. The failure is logged rather than fatal.
+- Per-frame Vision and sound-classification errors are logged and skipped.
+- If your app is missing the `NSCameraUsageDescription` key, the camera view shows an on-screen
+  message explaining what to add instead of a black preview.
+
+Diagnostics use Apple's unified logging system (`os.Logger`) under the subsystem
+`com.prototypekit.PrototypeKit`, so nothing is printed to your console in Release builds. To watch
+PrototypeKit's logs while developing:
+
+```sh
+log stream --predicate 'subsystem == "com.prototypekit.PrototypeKit"'
+```
+
+PrototypeKit only logs developer-facing diagnostics — never the contents of camera frames,
+audio, or recognized text.
+
 ## FAQs
 
 <details>
 <summary>Is this production ready?</summary>
 <br>
-no.
+Not yet — PrototypeKit is intended for prototyping and idea validation, and it does not yet publish
+versioned releases. That said, it no longer crashes the host app on bad input (missing/invalid
+models, denied permissions, audio interruptions): those paths now degrade gracefully and log
+through <code>os.Logger</code>. See the <a href="CHANGELOG.md">CHANGELOG</a> for details.
 </details>

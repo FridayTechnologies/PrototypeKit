@@ -94,7 +94,37 @@ public struct ActivityClassifierConfiguration {
 
 final class ActivityClassifierReceiver: ObservableObject {
 
-    private let mlModel: MLModel
+    /// Rolling buffers of raw sensor samples, one per axis.
+    ///
+    /// Allocated together so the receiver is either fully ready to classify or not at all.
+    private struct SensorBuffers {
+        let accelerometerX: MLMultiArray
+        let accelerometerY: MLMultiArray
+        let accelerometerZ: MLMultiArray
+        let gyroscopeX: MLMultiArray
+        let gyroscopeY: MLMultiArray
+        let gyroscopeZ: MLMultiArray
+
+        init?(windowSize: Int) {
+            let shape = [NSNumber(value: windowSize)]
+            guard
+                let accelerometerX = try? MLMultiArray(shape: shape, dataType: .double),
+                let accelerometerY = try? MLMultiArray(shape: shape, dataType: .double),
+                let accelerometerZ = try? MLMultiArray(shape: shape, dataType: .double),
+                let gyroscopeX = try? MLMultiArray(shape: shape, dataType: .double),
+                let gyroscopeY = try? MLMultiArray(shape: shape, dataType: .double),
+                let gyroscopeZ = try? MLMultiArray(shape: shape, dataType: .double)
+            else { return nil }
+            self.accelerometerX = accelerometerX
+            self.accelerometerY = accelerometerY
+            self.accelerometerZ = accelerometerZ
+            self.gyroscopeX = gyroscopeX
+            self.gyroscopeY = gyroscopeY
+            self.gyroscopeZ = gyroscopeZ
+        }
+    }
+
+    private let mlModel: MLModel?
     private let configuration: ActivityClassifierConfiguration
     private let motionManager = CMMotionManager()
 
@@ -103,13 +133,8 @@ final class ActivityClassifierReceiver: ObservableObject {
     /// The number of samples that make up one prediction window.
     private let windowSize: Int
 
-    /// Rolling buffers of raw sensor samples, one per axis.
-    private let accelerometerX: MLMultiArray
-    private let accelerometerY: MLMultiArray
-    private let accelerometerZ: MLMultiArray
-    private let gyroscopeX: MLMultiArray
-    private let gyroscopeY: MLMultiArray
-    private let gyroscopeZ: MLMultiArray
+    /// The sensor sample buffers, or `nil` when the model failed to load or buffers could not be allocated.
+    private let buffers: SensorBuffers?
 
     /// The recurrent state carried between predictions, if the model uses one.
     private var stateIn: MLMultiArray?
@@ -119,11 +144,17 @@ final class ActivityClassifierReceiver: ObservableObject {
 
     private var timer: Timer?
 
-    init(mlModel: MLModel, configuration: ActivityClassifierConfiguration) {
+    /// Creates a receiver for the given activity model.
+    ///
+    /// - Parameters:
+    ///   - mlModel: The Core ML activity-classification model, or `nil` when the model failed to load.
+    ///     When `nil`, sampling never starts and no predictions are published.
+    ///   - configuration: The sensor and feature-name configuration.
+    init(mlModel: MLModel?, configuration: ActivityClassifierConfiguration) {
         self.mlModel = mlModel
         self.configuration = configuration
 
-        let inputs = mlModel.modelDescription.inputDescriptionsByName
+        let inputs = mlModel?.modelDescription.inputDescriptionsByName ?? [:]
 
         // Prefer the model's own window size when it advertises one, so the buffers always match.
         let modelWindowSize = inputs[configuration.accelerometerXFeatureName]?
@@ -131,13 +162,7 @@ final class ActivityClassifierReceiver: ObservableObject {
         let resolvedWindowSize = modelWindowSize ?? configuration.predictionWindowSize
         self.windowSize = resolvedWindowSize
 
-        let shape = [NSNumber(value: resolvedWindowSize)]
-        self.accelerometerX = try! MLMultiArray(shape: shape, dataType: .double)
-        self.accelerometerY = try! MLMultiArray(shape: shape, dataType: .double)
-        self.accelerometerZ = try! MLMultiArray(shape: shape, dataType: .double)
-        self.gyroscopeX = try! MLMultiArray(shape: shape, dataType: .double)
-        self.gyroscopeY = try! MLMultiArray(shape: shape, dataType: .double)
-        self.gyroscopeZ = try! MLMultiArray(shape: shape, dataType: .double)
+        self.buffers = mlModel == nil ? nil : SensorBuffers(windowSize: resolvedWindowSize)
 
         // Allocate the recurrent state buffer (zero-filled) only if the model expects one.
         if let stateConstraint = inputs[configuration.stateInFeatureName]?.multiArrayConstraint,
@@ -151,6 +176,7 @@ final class ActivityClassifierReceiver: ObservableObject {
 
     /// Begins sampling the accelerometer and gyroscope and classifying activity.
     func start() {
+        guard mlModel != nil, buffers != nil else { return }
         guard motionManager.isAccelerometerAvailable, motionManager.isGyroAvailable else { return }
         guard timer == nil else { return }
 
@@ -178,15 +204,16 @@ final class ActivityClassifierReceiver: ObservableObject {
     /// Reads the latest synchronized accelerometer and gyroscope values into the buffers,
     /// running a prediction once a full window has been collected.
     private func sample() {
+        guard let buffers = buffers else { return }
         guard let accelerometer = motionManager.accelerometerData,
               let gyroscope = motionManager.gyroData else { return }
 
-        accelerometerX[sampleCount] = NSNumber(value: accelerometer.acceleration.x)
-        accelerometerY[sampleCount] = NSNumber(value: accelerometer.acceleration.y)
-        accelerometerZ[sampleCount] = NSNumber(value: accelerometer.acceleration.z)
-        gyroscopeX[sampleCount] = NSNumber(value: gyroscope.rotationRate.x)
-        gyroscopeY[sampleCount] = NSNumber(value: gyroscope.rotationRate.y)
-        gyroscopeZ[sampleCount] = NSNumber(value: gyroscope.rotationRate.z)
+        buffers.accelerometerX[sampleCount] = NSNumber(value: accelerometer.acceleration.x)
+        buffers.accelerometerY[sampleCount] = NSNumber(value: accelerometer.acceleration.y)
+        buffers.accelerometerZ[sampleCount] = NSNumber(value: accelerometer.acceleration.z)
+        buffers.gyroscopeX[sampleCount] = NSNumber(value: gyroscope.rotationRate.x)
+        buffers.gyroscopeY[sampleCount] = NSNumber(value: gyroscope.rotationRate.y)
+        buffers.gyroscopeZ[sampleCount] = NSNumber(value: gyroscope.rotationRate.z)
 
         sampleCount += 1
 
@@ -198,13 +225,15 @@ final class ActivityClassifierReceiver: ObservableObject {
 
     /// Runs the model over the current window and publishes the predicted label.
     private func predict() {
+        guard let mlModel = mlModel, let buffers = buffers else { return }
+
         var features: [String: Any] = [
-            configuration.accelerometerXFeatureName: accelerometerX,
-            configuration.accelerometerYFeatureName: accelerometerY,
-            configuration.accelerometerZFeatureName: accelerometerZ,
-            configuration.gyroscopeXFeatureName: gyroscopeX,
-            configuration.gyroscopeYFeatureName: gyroscopeY,
-            configuration.gyroscopeZFeatureName: gyroscopeZ
+            configuration.accelerometerXFeatureName: buffers.accelerometerX,
+            configuration.accelerometerYFeatureName: buffers.accelerometerY,
+            configuration.accelerometerZFeatureName: buffers.accelerometerZ,
+            configuration.gyroscopeXFeatureName: buffers.gyroscopeX,
+            configuration.gyroscopeYFeatureName: buffers.gyroscopeY,
+            configuration.gyroscopeZFeatureName: buffers.gyroscopeZ
         ]
         if let stateIn = stateIn {
             features[configuration.stateInFeatureName] = stateIn
@@ -276,14 +305,18 @@ struct ClassifyActivityModifier: ViewModifier {
     init(modelURL: URL,
          configuration: ActivityClassifierConfiguration,
          latestActivity: Binding<String?>) {
+        self._latestActivity = latestActivity
+        let loadedModel: MLModel?
         do {
-            let mlModel = try MLModel(contentsOf: modelURL)
-            self._receiver = StateObject(wrappedValue: ActivityClassifierReceiver(mlModel: mlModel,
-                                                                                  configuration: configuration))
-            self._latestActivity = latestActivity
+            loadedModel = try MLModel(contentsOf: modelURL)
         } catch {
-            fatalError() // TODO: Make this prettier.
+            // Degrade gracefully: the modifier stays inert rather than crashing the host app
+            // when the model can't be loaded.
+            PKLog.model.error("Failed to load activity model at \(modelURL.path): \(error.localizedDescription)")
+            loadedModel = nil
         }
+        self._receiver = StateObject(wrappedValue: ActivityClassifierReceiver(mlModel: loadedModel,
+                                                                              configuration: configuration))
     }
 
     func body(content: Content) -> some View {
