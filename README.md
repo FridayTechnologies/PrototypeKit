@@ -154,6 +154,50 @@ struct ImageClassifierViewSample: View {
 </details>
 
 
+### Live Object Detection
+
+Detect and locate objects in the live camera feed using a Create ML / Core ML **Object Detector** model.
+
+1. **Required Step:** Drag in your Create ML / Core ML object detector model into Xcode.
+2. Change `MyObjectDetector` below to the name of your Model.
+3. `detectedObjects` holds the labels of the objects found in the latest frame; use it as you would any other state variable.
+
+Utilise `ObjectDetectorView`
+
+```swift
+ObjectDetectorView(modelURL: MyObjectDetector.urlOfModelInThisBundle,
+                   detectedObjects: $detectedObjects)
+```
+
+<details>
+<summary>Full Example</summary>
+<br>
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct ObjectDetectorViewSample: View {
+
+    @State var detectedObjects: [String] = []
+
+    var body: some View {
+        VStack {
+            ObjectDetectorView(modelURL: MyObjectDetector.urlOfModelInThisBundle,
+                               detectedObjects: $detectedObjects)
+
+            ScrollView {
+                ForEach(Array(detectedObjects.enumerated()), id: \.offset) { index, object in
+                    Text(object)
+                }
+            }
+        }
+    }
+}
+```
+</details>
+
+
 ### Live Hand Pose Classification
 
 Classify hand poses in real-time using a Create ML / Core ML hand action classifier.

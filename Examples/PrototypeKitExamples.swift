@@ -23,6 +23,7 @@ struct ExampleGallery: View {
                     NavigationLink("Live barcodes", destination: LiveBarcodeExample())
                     NavigationLink("Face detection", destination: FaceCountExample())
                     NavigationLink("Image classification", destination: ImageClassifierExample())
+                    NavigationLink("Object detection", destination: ObjectDetectorExample())
                 }
                 Section("Sound") {
                     NavigationLink("Sound recognition", destination: SoundExample())
@@ -110,6 +111,32 @@ struct ImageClassifierExample: View {
                 errorMessage = error.localizedDescription
             }
             Text(errorMessage ?? (prediction.isEmpty ? "Classifying…" : prediction))
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(.thinMaterial)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// Detects objects in each camera frame with a Create ML object detector.
+///
+/// Replace `modelURL` with your own model, e.g. `MyObjectDetector.urlOfModelInThisBundle`.
+struct ObjectDetectorExample: View {
+    @State private var detectedObjects: [String] = []
+    @State private var errorMessage: String?
+
+    // Point this at your Create ML object detector's `urlOfModelInThisBundle`.
+    private let modelURL = URL(fileURLWithPath: "/path/to/YourObjectDetector.mlmodelc")
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            ObjectDetectorView(modelURL: modelURL,
+                               detectedObjects: $detectedObjects) { error in
+                // React to a model-load failure instead of showing a silent, detection-less feed.
+                errorMessage = error.localizedDescription
+            }
+            Text(errorMessage ?? (detectedObjects.isEmpty ? "Detecting…" : detectedObjects.joined(separator: ", ")))
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(.thinMaterial)

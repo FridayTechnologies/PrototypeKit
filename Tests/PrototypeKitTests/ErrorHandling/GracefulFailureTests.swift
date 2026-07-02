@@ -34,6 +34,11 @@ final class GracefulFailureTests: XCTestCase {
         XCTAssertNoThrow(view.body)
     }
 
+    func testObjectDetectorViewInitWithBadURLDoesNotCrash() throws {
+        let view = ObjectDetectorView(modelURL: bogusModelURL)
+        XCTAssertNoThrow(view.body)
+    }
+
     // MARK: - The optional onError hook is accepted and does not crash construction
 
     func testImageClassifierViewAcceptsOnError() throws {
@@ -43,6 +48,11 @@ final class GracefulFailureTests: XCTestCase {
 
     func testHandPoseClassifierViewAcceptsOnError() throws {
         let view = HandPoseClassifierView(modelURL: bogusModelURL, onError: { _ in })
+        XCTAssertNoThrow(view.body)
+    }
+
+    func testObjectDetectorViewAcceptsOnError() throws {
+        let view = ObjectDetectorView(modelURL: bogusModelURL, onError: { _ in })
         XCTAssertNoThrow(view.body)
     }
 
@@ -75,6 +85,15 @@ final class GracefulFailureTests: XCTestCase {
         receiver.processImage(frame)
 
         XCTAssertNil(receiver.latestPrediction)
+    }
+
+    func testObjectDetectorReceiverWithNilModelIgnoresFrames() throws {
+        let receiver = ObjectDetectorReceiver(vnMLModel: nil)
+        let frame = try makeSolidColorCGImage(width: 64, height: 64)
+
+        receiver.processImage(frame)
+
+        XCTAssertTrue(receiver.detectedObjects.isEmpty)
     }
 
     // MARK: - Activity classification (iOS only) must stay inert without a model
