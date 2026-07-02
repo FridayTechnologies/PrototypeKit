@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "PrototypeKit",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v14),
         .macOS(.v13)

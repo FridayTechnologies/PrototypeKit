@@ -1,0 +1,5 @@
+/* Shown on the camera preview when the app is missing the camera usage description. */
+"camera.missingUsageDescription" = "Camera unavailable: add the \"Privacy - Camera Usage Description\" (NSCameraUsageDescription) key to your app's Info settings. See the PrototypeKit setup guide.";
+
+/* Shown in place of the camera preview in the iOS Simulator and SwiftUI previews. */
+"camera.unavailableInSimulator" = "Live camera is not supported in previews.";

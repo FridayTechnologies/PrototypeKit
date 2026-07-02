@@ -39,9 +39,9 @@ class CameraViewController: UIViewController {
         guard checkDeveloperHasConfiguredInfoPlist() else {
             presentCenteredMessage(
                 icon: "⚠️",
-                text: "Camera unavailable: add the \"Privacy - Camera Usage Description\" "
-                    + "(NSCameraUsageDescription) key to your app's Info settings. "
-                    + "See the PrototypeKit setup guide.")
+                text: NSLocalizedString("camera.missingUsageDescription",
+                                        bundle: .module,
+                                        comment: "Shown on the camera preview when NSCameraUsageDescription is missing."))
             return
         }
         #if targetEnvironment(simulator)
@@ -70,7 +70,11 @@ class CameraViewController: UIViewController {
     
     func checkAndHandleSimulator() {
 #if targetEnvironment(simulator)
-        presentCenteredMessage(icon: "📸", text: "Live camera is not supported in previews.")
+        presentCenteredMessage(
+            icon: "📸",
+            text: NSLocalizedString("camera.unavailableInSimulator",
+                                    bundle: .module,
+                                    comment: "Shown in place of the camera preview in the Simulator and previews."))
 #endif
     }
 
