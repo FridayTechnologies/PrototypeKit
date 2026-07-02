@@ -4,8 +4,9 @@ description: >-
   Reference and code-generation guide for PrototypeKit, a SwiftUI framework for
   rapid on-device machine-learning prototyping on iOS/macOS. Use whenever the
   user is building with PrototypeKit or asks for a live camera feed, on-device
-  image classification, live text/OCR recognition, barcode scanning, animal
-  recognition, face detection, body pose detection, rectangle detection, hand-pose
+  image classification, object detection, live text/OCR recognition, barcode
+  scanning, animal recognition, face detection, body pose detection, rectangle
+  detection, hand-pose
   classification, sound recognition, or natural-language analysis (sentiment,
   language identification, named-entity recognition) in a SwiftUI app. Provides exact
   initializer signatures, @State/@Binding wiring, required Info.plist privacy
@@ -45,7 +46,7 @@ Then `import PrototypeKit` in any file that uses it.
 
 ## Required Info.plist permissions (most common cause of crashes)
 
-Any camera-based view (`PKCameraView`, `ImageClassifierView`,
+Any camera-based view (`PKCameraView`, `ImageClassifierView`, `ObjectDetectorView`,
 `LiveTextRecognizerView`, `LiveBarcodeRecognizerView`, `LiveAnimalRecognizerView`,
 `LiveFaceDetectorView`, `LiveBodyPoseDetectorView`, `LiveRectangleDetectorView`,
 `HandPoseClassifierView`) requires a camera-usage description, or the app crashes on
@@ -64,8 +65,8 @@ To add: select the project ▸ your target ▸ **Info** tab ▸ right-click the
 
 ## Core ML models
 
-Views that classify (`ImageClassifierView`, `HandPoseClassifierView`) take a
-`modelURL: URL` pointing at a compiled Core ML model.
+Views that classify or detect (`ImageClassifierView`, `ObjectDetectorView`,
+`HandPoseClassifierView`) take a `modelURL: URL` pointing at a compiled Core ML model.
 
 1. Drag your `.mlmodel` (from Create ML / Core ML) into the Xcode project.
 2. Xcode generates a Swift class named after the model.
@@ -126,6 +127,95 @@ struct ImageClassifierViewSample: View {
             ImageClassifierView(modelURL: FruitClassifier.urlOfModelInThisBundle,
                                 latestPrediction: $latestPrediction)
             Text(latestPrediction)
+        }
+    }
+}
+```
+
+### `ObjectDetectorView` — live object detection (Core ML)
+
+Runs a Create ML / Core ML **Object Detector** model on each camera frame and publishes the
+objects found. There are two initializers — pick by whether you need only *what* was detected or
+also *where*:
+
+```swift
+// Labels only:
+public init(modelURL: URL,
+            detectedObjects: Binding<[String]> = .constant([]),
+            camera: CameraOptions? = nil,
+            onError: ((PrototypeKitError) -> Void)? = nil)
+
+// Labels + confidence + bounding boxes:
+public init(modelURL: URL,
+            detectedObjects: Binding<[DetectedObject]>,
+            camera: CameraOptions? = nil,
+            onError: ((PrototypeKitError) -> Void)? = nil)
+```
+
+`DetectedObject` is a public value type:
+
+```swift
+public struct DetectedObject: Equatable {
+    public let label: String       // top Vision label
+    public let confidence: Float   // 0...1
+    public let boundingBox: CGRect // normalized (0...1), origin bottom-left (Vision convention)
+}
+```
+
+The overload is chosen by the binding's element type: pass `Binding<[String]>` for labels only, or
+`Binding<[DetectedObject]>` for positions. Vision's bounding-box origin is bottom-left, so flip the
+`y` axis (`1 - boundingBox.midY`) when positioning a SwiftUI overlay.
+
+Full example (labels only):
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct ObjectDetectorViewSample: View {
+    @State var detectedObjects: [String] = []
+
+    var body: some View {
+        VStack {
+            ObjectDetectorView(modelURL: MyObjectDetector.urlOfModelInThisBundle,
+                               detectedObjects: $detectedObjects)
+
+            ScrollView {
+                ForEach(Array(detectedObjects.enumerated()), id: \.offset) { index, object in
+                    Text(object)
+                }
+            }
+        }
+    }
+}
+```
+
+Full example (bounding boxes):
+
+```swift
+import SwiftUI
+import PrototypeKit
+
+struct ObjectDetectorBoxesSample: View {
+    @State var detectedObjects: [DetectedObject] = []
+
+    var body: some View {
+        ZStack {
+            ObjectDetectorView(modelURL: MyObjectDetector.urlOfModelInThisBundle,
+                               detectedObjects: $detectedObjects)
+
+            GeometryReader { geometry in
+                ForEach(Array(detectedObjects.enumerated()), id: \.offset) { _, object in
+                    let box = object.boundingBox
+                    Rectangle()
+                        .stroke(.red, lineWidth: 2)
+                        .frame(width: box.width * geometry.size.width,
+                               height: box.height * geometry.size.height)
+                        .position(x: box.midX * geometry.size.width,
+                                  y: (1 - box.midY) * geometry.size.height)
+                        .overlay(Text(object.label))
+                }
+            }
         }
     }
 }
@@ -438,9 +528,11 @@ struct SentimentView: View {
 
 - **Missing privacy key = crash.** Add `NSCameraUsageDescription` (camera views)
   and `NSMicrophoneUsageDescription` (`recognizeSounds`) before running.
-- **Bad model URL.** `ImageClassifierView` / `HandPoseClassifierView` currently
-  call `fatalError()` if the model fails to load. Verify the model is in the
-  target's bundle and the generated class name matches.
+- **Bad model URL.** `ImageClassifierView` / `ObjectDetectorView` /
+  `HandPoseClassifierView` degrade gracefully if the model fails to load — the camera
+  feed still shows but no predictions/detections are produced, and the failure is logged
+  (and reported to `onError` where available). Verify the model is in the target's bundle
+  and the generated class name matches.
 - **Simulator limits.** The camera isn't available in the iOS Simulator (limited
   preview), and inference falls back to CPU-only in the simulator and under XCTest.
 - **`recognizeSounds` is iOS-only** and requires iOS 15+. It is not available on

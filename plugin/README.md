@@ -31,6 +31,7 @@ claude --plugin-dir ./plugin
 | `/prototypekit:setup` | Add the SwiftPM package and configure Info.plist privacy keys |
 | `/prototypekit:camera` | Scaffold a live camera feed (`PKCameraView`) |
 | `/prototypekit:image-classifier` | Scaffold live image classification (`ImageClassifierView`, Core ML) |
+| `/prototypekit:object-detector` | Scaffold live object detection (`ObjectDetectorView`, Core ML) |
 | `/prototypekit:text-recognizer` | Scaffold live text recognition / OCR (`LiveTextRecognizerView`) |
 | `/prototypekit:barcode-scanner` | Scaffold live barcode/QR scanning (`LiveBarcodeRecognizerView`) |
 | `/prototypekit:animal-recognizer` | Scaffold live animal recognition — cats & dogs (`LiveAnimalRecognizerView`) |

@@ -59,6 +59,8 @@ directory for a runnable gallery covering every feature.
 ### Vision & Core ML
 
 - ``ImageClassifierView``
+- ``ObjectDetectorView``
+- ``DetectedObject``
 - ``HandPoseClassifierView``
 - ``LiveTextRecognizerView``
 - ``LiveBarcodeRecognizerView``
