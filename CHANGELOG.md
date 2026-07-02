@@ -74,6 +74,11 @@ go through `os.Logger`, and the public view API is unchanged from prior `master`
 ### CI
 - Removed a duplicate `actions/checkout` step from the Swift workflow, upgraded it to `v4`,
   pinned the simulator destination to `OS=latest`, and added `concurrency` cancellation.
+- Broadened CI into separate jobs: iOS + macOS tests now collect code coverage (summarised in
+  the job summary); a new job builds for a generic iOS device to validate the minimum
+  deployment target and availability annotations; and two non-blocking audit jobs run SwiftLint
+  and a complete-concurrency (Swift 6 readiness) build.
+- Added a `.swiftlint.yml` (lenient, curated rule set) and Dependabot for GitHub Actions.
 
 ### Meta
 - Aligned the plugin marketplace catalog version with the pre-release (`0.1.0`) status.
