@@ -77,17 +77,13 @@ extension View {
 
 @available(iOS 15.0, *)
 struct RecognizeSoundsModifier: ViewModifier {
-    
-    @State var cancellables = [AnyCancellable]()
-    
+
     @Binding var recognizedSound: String?
-    
-    static let classificationSubject = PassthroughSubject<SNClassificationResult, Error>()
-    
+
     init(recognizedSound: Binding<String?>, configuration: SoundAnalysisConfiguration = .init()) {
         self._recognizedSound = recognizedSound
         SystemAudioClassifier.singleton.stopSoundClassification()
-        
+
         if let customModel = configuration.mlModel {
             // Use custom Core ML model for sound classification
             do {
@@ -95,9 +91,7 @@ struct RecognizeSoundsModifier: ViewModifier {
                 request.windowDuration = CMTimeMakeWithSeconds(configuration.inferenceWindowSize, preferredTimescale: 48_000)
                 request.overlapFactor = configuration.overlapFactor
 
-                SystemAudioClassifier.singleton.startSoundClassification(
-                    subject: Self.classificationSubject,
-                    request: request)
+                SystemAudioClassifier.singleton.startSoundClassification(request: request)
             } catch {
                 // Degrade gracefully: no classification starts rather than crashing the host app
                 // when the custom model can't back a sound request.
@@ -106,12 +100,11 @@ struct RecognizeSoundsModifier: ViewModifier {
         } else {
             // Use system sound classifier
             SystemAudioClassifier.singleton.startSoundClassification(
-                subject: Self.classificationSubject,
                 inferenceWindowSize: configuration.inferenceWindowSize,
                 overlapFactor: configuration.overlapFactor)
         }
     }
-    
+
     func body(content: Content) -> some View {
         content
             .onReceive(classificationPublisher, perform: { result in
@@ -119,18 +112,15 @@ struct RecognizeSoundsModifier: ViewModifier {
             })
     }
 
-    /// A main-thread publisher that never fails.
+    /// A main-thread publisher of classification results.
     ///
-    /// `SystemAudioClassifier` reports interruptions and errors as a Combine `.failure` completion.
-    /// Surfacing that directly to `onReceive` with `assertNoFailure()` would trap and crash the host
-    /// app, so we log the error and swallow it, leaving the last recognized sound in place.
+    /// It reads from `SystemAudioClassifier`'s long-lived `results` relay, which never sends a
+    /// completion — an audio interruption or error ends only that session, not the stream, so
+    /// recognition resumes when classification is restarted. (This replaces an earlier `assertNoFailure()`
+    /// that could trap and crash the host app on the first interruption.)
     private var classificationPublisher: AnyPublisher<SNClassificationResult, Never> {
-        Self.classificationSubject
+        SystemAudioClassifier.singleton.results
             .receive(on: DispatchQueue.main)
-            .catch { error -> Empty<SNClassificationResult, Never> in
-                PKLog.audio.error("Sound classification failed: \(error.localizedDescription)")
-                return Empty<SNClassificationResult, Never>()
-            }
             .eraseToAnyPublisher()
     }
 }

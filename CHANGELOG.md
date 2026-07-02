@@ -8,6 +8,14 @@ once tagged releases begin.
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.1.0] - 2026-07-02
+
+First tagged release. PrototypeKit remains a prototyping toolkit, but this release makes it
+safe to embed in a real app: no code path crashes the host app on bad input, all diagnostics
+go through `os.Logger`, and the public view API is unchanged from prior `master`.
+
 ### Changed
 - **Crash safety.** PrototypeKit no longer crashes the host app on bad input. View
   initializers that previously called `fatalError()` when a Core ML model failed to load
@@ -20,6 +28,11 @@ once tagged releases begin.
   the audio session was interrupted or microphone access was denied. Errors are now logged
   and swallowed, leaving the last recognized value in place.
 - Creating a sound request from a custom Core ML model no longer uses `try!`.
+- Live sound recognition now recovers after an audio interruption or error. Results are
+  published on a long-lived relay in `SystemAudioClassifier` that never completes; a failed
+  session is logged and torn down without killing the stream, so restarting classification
+  resumes delivery. Previously a single failure permanently stopped recognition for the app's
+  lifetime (the shared subject completed and could never emit again).
 - An unknown microphone-authorization status is treated as "no access" rather than calling
   `fatalError()`.
 - Diagnostics now go through the unified logging system (`os.Logger`, subsystem
@@ -39,3 +52,6 @@ once tagged releases begin.
 ### Meta
 - Aligned the plugin marketplace catalog version with the pre-release (`0.1.0`) status.
 - Added this changelog.
+
+[Unreleased]: https://github.com/FridayTechnologies/PrototypeKit/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/FridayTechnologies/PrototypeKit/releases/tag/0.1.0

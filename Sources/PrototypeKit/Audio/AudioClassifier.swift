@@ -43,8 +43,20 @@ final class SystemAudioClassifier: NSObject {
     /// the variable is `nil`, freeing the observers from memory.
     private var retainedObservers: [SNResultsObserving]?
 
-    /// A subject to deliver sound classification results to, including an error, if necessary.
-    private var subject: PassthroughSubject<SNClassificationResult, Error>?
+    /// A long-lived relay that publishes classification results for the lifetime of the process.
+    ///
+    /// This relay never sends a completion, so a single audio interruption or error does not
+    /// permanently end the stream. Each classification *session* uses its own short-lived subject
+    /// (which does terminate on error, per the Sound Analysis contract); the session's values are
+    /// forwarded here, and its completion is logged rather than propagated. Callers can therefore
+    /// restart classification after an interruption and keep receiving results on the same relay.
+    let results = PassthroughSubject<SNClassificationResult, Never>()
+
+    /// The subject for the current classification session, if any.
+    private var sessionSubject: PassthroughSubject<SNClassificationResult, Error>?
+
+    /// The subscription bridging the current session subject into ``results``.
+    private var sessionCancellable: AnyCancellable?
 
     /// Initializes a SystemAudioClassifier instance, and marks it as private because the instance operates as a singleton.
     private override init() {}
@@ -137,8 +149,30 @@ final class SystemAudioClassifier: NSObject {
     @objc
     private func handleAudioSessionInterruption(_ notification: Notification) {
         let error = SystemAudioClassificationError.audioStreamInterrupted
-        subject?.send(completion: .failure(error))
+        sessionSubject?.send(completion: .failure(error))
         stopSoundClassification()
+    }
+
+    /// Bridges a fresh session subject into the long-lived ``results`` relay.
+    ///
+    /// Values flow through to ``results``; a `.failure` completion is logged (not propagated), and any
+    /// completion tears down the session so a later `start` can begin cleanly.
+    private func beginSession() -> PassthroughSubject<SNClassificationResult, Error> {
+        let sessionSubject = PassthroughSubject<SNClassificationResult, Error>()
+        self.sessionSubject = sessionSubject
+        self.sessionCancellable = sessionSubject.sink(
+            receiveCompletion: { [weak self] completion in
+                if case .failure(let error) = completion {
+                    PKLog.audio.error("Sound classification session ended: \(error.localizedDescription)")
+                }
+                self?.sessionCancellable = nil
+                self?.sessionSubject = nil
+            },
+            receiveValue: { [weak self] result in
+                self?.results.send(result)
+            }
+        )
+        return sessionSubject
     }
     
     /// Starts sound analysis of the system's audio input.
@@ -208,24 +242,21 @@ final class SystemAudioClassifier: NSObject {
 
     /// Classifies system audio input using a custom Core ML model.
     ///
-    /// - Parameters:
-    ///   - subject: A subject publishes the results of the sound classification. The subject receives
-    ///   notice when classification terminates. A caller may attach subscribers to the subject before or
-    ///   after calling this method. By attaching after, you may miss errors if classification fails to start.
-    ///   - request: A configured sound classification request that includes the custom ML model.
-    func startSoundClassification(subject: PassthroughSubject<SNClassificationResult, Error>,
-                                request: SNClassifySoundRequest) {
+    /// Results are published on the long-lived ``results`` relay. Subscribe to ``results`` to receive
+    /// classifications; the relay survives interruptions, so classification can be restarted.
+    ///
+    /// - Parameter request: A configured sound classification request that includes the custom ML model.
+    func startSoundClassification(request: SNClassifySoundRequest) {
         stopSoundClassification()
 
+        let sessionSubject = beginSession()
         do {
-            let observer = ClassificationResultsSubject(subject: subject)
-            self.subject = subject
+            let observer = ClassificationResultsSubject(subject: sessionSubject)
 
             startListeningForAudioSessionInterruptions()
             try startAnalyzing([(request, observer)])
         } catch {
-            subject.send(completion: .failure(error))
-            self.subject = nil
+            sessionSubject.send(completion: .failure(error))
             stopSoundClassification()
         }
     }
@@ -249,33 +280,39 @@ final class SystemAudioClassifier: NSObject {
     ///   sound classification. As the factor increases, the stride decreases. As the stride decreases, the
     ///   system produces more predictions. So, at the computational expense of producing more predictions,
     ///   decreasing the stride by raising the overlap factor can improve perceived responsiveness.
-    func startSoundClassification(subject: PassthroughSubject<SNClassificationResult, Error>,
-                                inferenceWindowSize: Double,
+    ///
+    /// Results are published on the long-lived ``results`` relay. Subscribe to ``results`` to receive
+    /// classifications; the relay survives interruptions, so classification can be restarted.
+    func startSoundClassification(inferenceWindowSize: Double,
                                 overlapFactor: Double) {
         stopSoundClassification()
 
+        let sessionSubject = beginSession()
         do {
-            let observer = ClassificationResultsSubject(subject: subject)
+            let observer = ClassificationResultsSubject(subject: sessionSubject)
 
             let request = try SNClassifySoundRequest(classifierIdentifier: .version1)
             request.windowDuration = CMTimeMakeWithSeconds(inferenceWindowSize, preferredTimescale: 48_000)
             request.overlapFactor = overlapFactor
 
-            self.subject = subject
-
             startListeningForAudioSessionInterruptions()
             try startAnalyzing([(request, observer)])
         } catch {
-            subject.send(completion: .failure(error))
-            self.subject = nil
+            sessionSubject.send(completion: .failure(error))
             stopSoundClassification()
         }
     }
 
     /// Stops any active sound classification task.
+    ///
+    /// This tears down the current session without completing the long-lived ``results`` relay, so a
+    /// subsequent `startSoundClassification` can resume publishing on the same relay.
     func stopSoundClassification() {
         stopAnalyzing()
         stopListeningForAudioSessionInterruptions()
+        sessionCancellable?.cancel()
+        sessionCancellable = nil
+        sessionSubject = nil
     }
 
     /// Emits the set of labels producible by sound classification.

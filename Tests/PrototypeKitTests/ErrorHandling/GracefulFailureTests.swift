@@ -9,6 +9,7 @@
 import XCTest
 import CoreML
 import Vision
+import Combine
 
 @testable
 import PrototypeKit
@@ -64,6 +65,24 @@ final class GracefulFailureTests: XCTestCase {
         receiver.stop()
 
         XCTAssertNil(receiver.latestPrediction)
+    }
+
+    /// The shared sound-classification relay must not complete when a session stops, so recognition
+    /// can be restarted after an interruption or error (regression test for the previous design where
+    /// a single failure permanently killed the stream).
+    @available(iOS 15.0, *)
+    func testSoundClassificationRelaySurvivesStop() {
+        let classifier = SystemAudioClassifier.singleton
+
+        var completed = false
+        let cancellable = classifier.results.sink(receiveCompletion: { _ in completed = true },
+                                                  receiveValue: { _ in })
+
+        classifier.stopSoundClassification()
+        classifier.stopSoundClassification()
+
+        XCTAssertFalse(completed, "The results relay must stay open across stops so classification can resume.")
+        cancellable.cancel()
     }
     #endif
 }

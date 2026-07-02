@@ -29,8 +29,9 @@ PrototypeKit is distributed as a [Swift Package](https://www.swift.org/package-m
    ```
    https://github.com/FridayTechnologies/PrototypeKit
    ```
-3. For **Dependency Rule**, select **Branch** and enter `master` (PrototypeKit does not
-   publish versioned releases yet — see the note below).
+3. For **Dependency Rule**, select **Up to Next Major Version** starting from `0.1.0` for
+   reproducible builds. (To live on the latest unreleased changes instead, select **Branch**
+   and enter `master`.)
 4. Click **Add Package**, then add the **PrototypeKit** library to your app target.
 
 ### Add via `Package.swift`
@@ -39,7 +40,7 @@ If you maintain your own Swift package, add PrototypeKit to your `dependencies`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/FridayTechnologies/PrototypeKit", branch: "master")
+    .package(url: "https://github.com/FridayTechnologies/PrototypeKit", from: "0.1.0")
 ]
 ```
 
@@ -52,9 +53,10 @@ dependencies: [
 )
 ```
 
-> **Note:** PrototypeKit is a work in progress and does not yet tag versioned releases,
-> so the examples above track the `master` branch. Once tagged releases are available,
-> prefer pinning a version (e.g. `from: "1.0.0"`) for reproducible builds.
+> **Note:** PrototypeKit follows [Semantic Versioning](https://semver.org). It is still
+> pre-1.0, so minor version bumps (`0.x`) may include breaking changes; pin with
+> `.upToNextMinor(from: "0.1.0")` if you need stricter guarantees. See the
+> [CHANGELOG](CHANGELOG.md) for what's in each release.
 
 # Examples
 
