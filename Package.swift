@@ -19,7 +19,12 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "PrototypeKit"),
+            name: "PrototypeKit",
+            resources: [
+                // Ship the privacy manifest inside the library's resource bundle so apps that
+                // embed PrototypeKit inherit an accurate App Store privacy report.
+                .copy("PrivacyInfo.xcprivacy")
+            ]),
         .testTarget(
             name: "PrototypeKitTests",
             dependencies: ["PrototypeKit"],
